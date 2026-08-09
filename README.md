@@ -25,6 +25,10 @@ npm run smoke
 npm run scan:secrets
 npm run bundle
 npm run bundle:verify
+make status
+make release
+make deploy
+make rollback
 make doctor
 ```
 
@@ -33,6 +37,11 @@ make doctor
 `npm run bundle:verify` validates its MCPB v0.4 metadata, runtime dependency
 closure, executable entry point, and exclusions. These commands do not publish,
 install, or upload the bundle.
+
+`make release` is the local secret-scan/build/verify gate. `make deploy` records
+that this project has no deployed service—the `.mcpb` is distributed only as a
+GitHub Release asset. `make rollback` reports the protected owner boundary for
+reverting a published release.
 
 The package icon is the unchanged PiR2 Academy course-owned icon reused from
 `course-assets/create-mcp/sheets-reader-workshop/assets/icons/icon.png`

@@ -9,5 +9,6 @@ Use strict TDD: each consumer-visible behavior has a focused failing test before
 | Runtime | `npm run smoke` | Stdio server startup and MCP flow |
 | Source gate | `npm run check` | Lint, types, all tests |
 | Release candidate | `npm run scan:secrets && npm run bundle && npm run bundle:verify` | Credential exclusion and deterministic MCPB |
+| Release contract | `make release && make status && make deploy && make rollback` | Auditable local artifact, distribution boundary, and rollback instruction |
 
 No local source gate proves Claude Desktop installation, real personal-vault behavior, scheduled local-file execution, or release publication.
