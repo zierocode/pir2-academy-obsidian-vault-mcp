@@ -9,7 +9,7 @@
   "author": {
     "name": "PiR2 Academy"
   },
-  "icon": "icon.png",
+  "icon": "assets/icons/icon.png",
   "license": "MIT",
   "keywords": [
     "obsidian",

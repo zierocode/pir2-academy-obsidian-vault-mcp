@@ -28,4 +28,14 @@ npm run bundle:verify
 make doctor
 ```
 
+`npm run bundle` writes the local deterministic release candidate to
+`dist/pir2-academy-obsidian-vault-0.1.0.mcpb` and prints its SHA-256 checksum.
+`npm run bundle:verify` validates its MCPB v0.4 metadata, runtime dependency
+closure, executable entry point, and exclusions. These commands do not publish,
+install, or upload the bundle.
+
+The package icon is the unchanged PiR2 Academy course-owned icon reused from
+`course-assets/create-mcp/sheets-reader-workshop/assets/icons/icon.png`
+(SHA-256 `d79748c26865b1b3d2b45810874648b73e7eecc4c887bbff30baffdaf5cf54c7`).
+
 The current verified state is recorded in `docs/LIVE.md`; test evidence is in `docs/TESTING.md`.

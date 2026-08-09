@@ -1,13 +1,13 @@
 # Roadmap and Backlog
 
-## Now
+## Release candidate complete
 
-- [ ] Implement canonical vault resolution, bounded reads, preview, backup, and atomic writes.
-- [ ] Add shell-free official Obsidian CLI adapter and stdio MCP server.
-- [ ] Build deterministic MCPB archive and cross-platform CI checks.
+- [x] Implement canonical vault resolution, bounded reads, preview, backup, and atomic writes.
+- [x] Add shell-free official Obsidian CLI adapter and stdio MCP server.
+- [x] Build deterministic MCPB archive and cross-platform CI checks.
 
 ## Deferred external gates
 
-- Claude Desktop installation and disposable-vault host canary
-- Public GitHub repository, release, and package publication
-- Clean-machine macOS/Windows and local scheduling evidence
+- [x] Claude Desktop installation and disposable-vault host canary (owned by the private course repository)
+- [ ] Public GitHub repository and release `v0.1.0`
+- [ ] Clean-machine macOS/Windows and local scheduling evidence (owned by the course OS matrix)
