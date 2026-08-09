@@ -59,7 +59,8 @@ describe("MCP startup smoke", () => {
   });
 
   it("runs the repository smoke command through MCP initialize and tools/list", () => {
-    const result = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "smoke"], {
+    if (!process.env.npm_execpath) throw new Error("npm_execpath is required for repository script tests");
+    const result = spawnSync(process.execPath, [process.env.npm_execpath, "run", "smoke"], {
       cwd: ROOT,
       encoding: "utf8",
       timeout: 30_000

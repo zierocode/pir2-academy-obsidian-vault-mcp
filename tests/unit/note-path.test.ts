@@ -50,7 +50,7 @@ describe("resolveNotePath", () => {
     expect(api).toBeDefined();
     const approved = await approvedVault(api!, vault);
     await expect(api?.resolveNotePath(approved, "01 Meetings/weekly.md")).resolves.toEqual({
-      absolutePath: resolve(realpathSync(vault), "01 Meetings/weekly.md"),
+      absolutePath: resolve(realpathSync.native(vault), "01 Meetings/weekly.md"),
       relativePath: "01 Meetings/weekly.md"
     });
   });

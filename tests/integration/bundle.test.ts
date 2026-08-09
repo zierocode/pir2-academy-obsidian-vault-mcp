@@ -14,7 +14,8 @@ type ArchiveEntry = { path: string; data: Buffer };
 type PathApi = Pick<typeof win32, "isAbsolute" | "relative" | "sep">;
 
 function runNpm(script: "bundle" | "bundle:verify") {
-  return spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["run", script], {
+  if (!process.env.npm_execpath) throw new Error("npm_execpath is required for repository script tests");
+  return spawnSync(process.execPath, [process.env.npm_execpath, "run", script], {
     cwd: ROOT,
     encoding: "utf8",
     timeout: 30_000
