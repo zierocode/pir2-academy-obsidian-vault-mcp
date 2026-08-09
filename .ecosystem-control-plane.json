@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "adoption_status": "template",
+  "repo_id": "repository",
+  "inherits": "zie-dev/ecosystem-control-plane-v1",
+  "ownership": {
+    "control_plane": {"owner": "zie-dev", "mode": "inherited"},
+    "persistent_memory": {"owner": "zie-brain", "mode": "external"},
+    "code_topology": {"owner": "codegraph", "mode": "external"},
+    "runtime_risk": {"owner": "repository", "mode": "repo_local"}
+  },
+  "cpa": {
+    "working_deck": {
+      "primary": "Codex Desktop Full Duplex Voice",
+      "purposes": ["live_conversation", "planning", "deep_work", "supervision"]
+    },
+    "direct_companion": {
+      "surface": "Hermes",
+      "relationship": "equal_direct",
+      "channels": ["Telegram", "iMessage", "mobile_async"],
+      "capabilities": ["conversation", "commands", "continuation", "connector_backed_briefings", "notifications"]
+    },
+    "host_routing": {
+      "execution_host": "Mac mini",
+      "service_connector_schedule_host": "VPS",
+      "remote_working_deck": {"client": "MacBook", "via": "Codex Desktop Remote", "target": "Mac mini"}
+    },
+    "connector_routing": {
+      "owner_router": "Hermes",
+      "codex_role": "execution_consumer",
+      "authentication_certified": false
+    },
+    "continuity": {
+      "durable_semantic_owner": "zie-brain",
+      "truth_hierarchy": ["Git", "Notion", "PDI"],
+      "receipt_projection_fields": ["scope", "source", "freshness", "decision", "blocker", "next_safe_action"],
+      "transcript_dumping": "prohibited"
+    },
+    "isolation": {
+      "work_domain": "PiR2",
+      "personal_domain": "personal",
+      "cross_principal_substitution": "prohibited",
+      "approval_gates": "preserved"
+    }
+  },
+  "lifecycle": {
+    "check": {"status": "supported", "owner": "repository", "command": ["make", "check"]},
+    "release": {"status": "not_applicable", "owner": "repository", "reason_code": "adoption_required"},
+    "deploy": {"status": "not_applicable", "owner": "repository", "reason_code": "adoption_required"},
+    "rollback": {"status": "not_applicable", "owner": "repository", "reason_code": "adoption_required"}
+  },
+  "evidence": {
+    "truth_layers": ["source"],
+    "operator_envelope_schema": "zie-dev/operator-evidence-v1"
+  },
+  "capabilities": [
+    {
+      "id": "repository_check",
+      "owner": "repository",
+      "evidence_command": ["make", "check"]
+    }
+  ],
+  "performance": {
+    "owner": "repository",
+    "budgets": []
+  },
+  "telemetry": {
+    "owner": "repository",
+    "privacy": "fixed_fields_no_prompts",
+    "gates": []
+  }
+}

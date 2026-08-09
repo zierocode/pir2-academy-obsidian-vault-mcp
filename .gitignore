@@ -1,0 +1,38 @@
+# Local environment
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+node_modules/
+
+# Build and cache output
+dist/
+build/
+.cache/
+.pytest_cache/
+__pycache__/
+*.pyc
+
+# OS and editor
+.DS_Store
+.idea/
+.vscode/
+
+# Logs
+*.log
+# Node build and dependency artifacts
+node_modules/
+server/
+dist/
+coverage/
+*.mcpb
+*.mcpb.sha256
+
+# Local/editor state and secrets
+.DS_Store
+*.log
+npm-debug.log*
+.env
+.env.*
+*.local

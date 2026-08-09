@@ -1,0 +1,77 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/main/schemas/mcpb-manifest-v0.4.schema.json",
+  "manifest_version": "0.4",
+  "name": "pir2-academy-obsidian-vault",
+  "display_name": "PiR2 Academy — Obsidian Vault",
+  "version": "0.1.0",
+  "description": "MCP สำหรับอ่านและเขียน Obsidian Markdown อย่างปลอดภัย โดย PiR2 Academy",
+  "long_description": "MCP แบบ local สำหรับอ่าน ค้นหา เปิด และเขียน Obsidian Markdown ภายใน Vault ที่ผู้เรียนเลือกเพียงหนึ่งแห่ง โดยต้อง preview และยืนยันก่อนบันทึกทุกครั้ง",
+  "author": {
+    "name": "PiR2 Academy"
+  },
+  "icon": "icon.png",
+  "license": "MIT",
+  "keywords": [
+    "obsidian",
+    "markdown",
+    "local",
+    "pir2-academy"
+  ],
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32"
+    ],
+    "runtimes": {
+      "node": ">=20"
+    }
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/index.js"
+      ],
+      "env": {
+        "APPROVED_VAULT_ROOT": "${user_config.approved_vault_root}"
+      }
+    }
+  },
+  "user_config": {
+    "approved_vault_root": {
+      "type": "directory",
+      "title": "โฟลเดอร์ Obsidian Vault ที่อนุญาต",
+      "description": "เลือก Obsidian Vault เพียงหนึ่งโฟลเดอร์ที่ MCP นี้อ่านและเขียนได้",
+      "required": true,
+      "multiple": false
+    }
+  },
+  "tools": [
+    {
+      "name": "obsidian_vault_status",
+      "description": "ตรวจว่า Obsidian Vault ที่อนุญาตพร้อมใช้งานหรือยัง"
+    },
+    {
+      "name": "search_obsidian_notes",
+      "description": "ค้นหาโน้ต Markdown ภายใน Obsidian Vault ที่อนุญาต"
+    },
+    {
+      "name": "read_obsidian_notes",
+      "description": "อ่านโน้ต Markdown ที่ระบุภายในขนาดปลอดภัย"
+    },
+    {
+      "name": "preview_obsidian_note_write",
+      "description": "สร้างตัวอย่างการเขียนโน้ตโดยยังไม่แก้ไฟล์จริง"
+    },
+    {
+      "name": "apply_obsidian_note_write",
+      "description": "บันทึกตัวอย่างล่าสุดหลังยืนยันด้วยข้อความที่กำหนด"
+    },
+    {
+      "name": "open_obsidian_note",
+      "description": "เปิดโน้ตที่ระบุในแอป Obsidian โดยไม่แก้เนื้อหา"
+    }
+  ]
+}
