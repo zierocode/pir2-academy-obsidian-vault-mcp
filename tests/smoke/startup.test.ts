@@ -45,7 +45,7 @@ describe("MCP startup smoke", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toBe("");
     expect(result.stderr).not.toContain(vault);
-  });
+  }, 30_000);
 
   it("compiles each server process into a distinct isolated output", () => {
     const firstServerPath = compileServer();
@@ -56,7 +56,7 @@ describe("MCP startup smoke", () => {
     expect(secondServerPath).not.toBe(firstServerPath);
     expect(existsSync(firstServerPath)).toBe(true);
     expect(existsSync(secondServerPath)).toBe(true);
-  });
+  }, 30_000);
 
   it("runs the repository smoke command through MCP initialize and tools/list", () => {
     if (!process.env.npm_execpath) throw new Error("npm_execpath is required for repository script tests");

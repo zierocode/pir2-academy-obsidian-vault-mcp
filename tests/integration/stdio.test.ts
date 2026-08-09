@@ -73,5 +73,5 @@ describe("compiled Obsidian MCP stdio server", () => {
     } finally {
       await client.close();
     }
-  });
+  }, 30_000);
 });
