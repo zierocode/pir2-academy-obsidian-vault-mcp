@@ -8,12 +8,8 @@ assignees: ""
 
 ## Symptom
 
-
 ## Expected Behavior
-
 
 ## Reproduction
 
-
 ## Verification
-

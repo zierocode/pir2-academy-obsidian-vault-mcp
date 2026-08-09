@@ -11,10 +11,9 @@ assignees: ""
 
 ## Acceptance Criteria
 
-- [ ] 
+- [ ]
 
 ## Verification
 
 
 ## Notes
-

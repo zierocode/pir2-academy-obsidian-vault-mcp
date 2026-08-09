@@ -1,6 +1,6 @@
 ## Summary
 
-- 
+-
 
 ## Verification
 
@@ -18,4 +18,4 @@
 
 ## Risk
 
-- 
+-
