@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { deflateRawSync } from "node:zlib";
@@ -26,14 +27,19 @@ function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
-function runBuild() {
-  rmSync(resolve(ROOT, "server"), { force: true, recursive: true });
-  const result = spawnSync(process.execPath, [TSC_PATH, "--project", "tsconfig.json"], {
+function buildBundleServer() {
+  const stage = mkdtempSync(resolve(tmpdir(), "pir2-academy-obsidian-mcpb-"));
+  const serverPath = resolve(stage, "server");
+  const result = spawnSync(process.execPath, [TSC_PATH, "--project", "tsconfig.json", "--outDir", serverPath], {
     cwd: ROOT,
     encoding: "utf8",
     shell: false
   });
-  assert(result.status === 0, "compiled server is unavailable");
+  if (result.status !== 0) {
+    rmSync(stage, { force: true, recursive: true });
+    throw new Error("compiled server is unavailable");
+  }
+  return { stage, serverPath };
 }
 
 function validateManifest() {
@@ -204,23 +210,27 @@ function createDeterministicZip(entries) {
 }
 
 function main() {
-  runBuild();
-  validateIdentity();
-  validateManifest();
-  const entries = new Map();
-  for (const file of ["manifest.json", "package.json", "README.md", "LICENSE", "SECURITY.md"]) {
-    addFile(entries, file, resolve(ROOT, file));
+  const build = buildBundleServer();
+  try {
+    validateIdentity();
+    validateManifest();
+    const entries = new Map();
+    for (const file of ["manifest.json", "package.json", "README.md", "LICENSE", "SECURITY.md"]) {
+      addFile(entries, file, resolve(ROOT, file));
+    }
+    addTree(entries, resolve(ROOT, "assets", "icons"), "assets/icons");
+    addTree(entries, build.serverPath, "server");
+    addDependencyClosure(entries);
+    const archive = createDeterministicZip(entries);
+    mkdirSync(dirname(OUTPUT_PATH), { recursive: true });
+    const temporaryOutput = `${OUTPUT_PATH}.${process.pid}.tmp`;
+    rmSync(temporaryOutput, { force: true });
+    writeFileSync(temporaryOutput, archive, { mode: 0o644 });
+    renameSync(temporaryOutput, OUTPUT_PATH);
+    process.stdout.write(`bundle=dist/${BUNDLE_NAME} sha256=${createHash("sha256").update(archive).digest("hex")} files=${entries.size}\n`);
+  } finally {
+    rmSync(build.stage, { force: true, recursive: true });
   }
-  addTree(entries, resolve(ROOT, "assets", "icons"), "assets/icons");
-  addTree(entries, resolve(ROOT, "server"), "server");
-  addDependencyClosure(entries);
-  const archive = createDeterministicZip(entries);
-  mkdirSync(dirname(OUTPUT_PATH), { recursive: true });
-  const temporaryOutput = `${OUTPUT_PATH}.tmp`;
-  rmSync(temporaryOutput, { force: true });
-  writeFileSync(temporaryOutput, archive, { mode: 0o644 });
-  renameSync(temporaryOutput, OUTPUT_PATH);
-  process.stdout.write(`bundle=dist/${BUNDLE_NAME} sha256=${createHash("sha256").update(archive).digest("hex")} files=${entries.size}\n`);
 }
 
 try {
