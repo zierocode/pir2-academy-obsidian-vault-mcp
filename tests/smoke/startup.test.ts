@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
@@ -14,7 +14,14 @@ function createVault(): string {
   temporaryRoots.push(root);
   const vault = resolve(root, "vault");
   mkdirSync(vault);
-  return vault;
+  return realpathSync(vault);
+}
+
+function compileServer(): string {
+  const outputRoot = mkdtempSync(resolve(ROOT, ".test-server-"));
+  temporaryRoots.push(outputRoot);
+  execFileSync(process.execPath, [TSC_PATH, "--project", "tsconfig.json", "--outDir", outputRoot], { cwd: ROOT, stdio: "pipe" });
+  return resolve(outputRoot, "index.js");
 }
 
 afterEach(() => {
@@ -23,10 +30,10 @@ afterEach(() => {
 
 describe("MCP startup smoke", () => {
   it("starts a stdio-only server and closes cleanly when stdin closes", () => {
-    execFileSync(process.execPath, [TSC_PATH, "--project", "tsconfig.json"], { cwd: ROOT, stdio: "pipe" });
-    expect(existsSync(SERVER_PATH)).toBe(true);
+    const serverPath = compileServer();
+    expect(existsSync(serverPath)).toBe(true);
     const vault = createVault();
-    const result = spawnSync(process.execPath, [SERVER_PATH], {
+    const result = spawnSync(process.execPath, [serverPath], {
       cwd: ROOT,
       env: { ...process.env, APPROVED_VAULT_ROOT: vault },
       input: "",
@@ -38,6 +45,17 @@ describe("MCP startup smoke", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toBe("");
     expect(result.stderr).not.toContain(vault);
+  });
+
+  it("compiles each server process into a distinct isolated output", () => {
+    const firstServerPath = compileServer();
+    const secondServerPath = compileServer();
+
+    expect(firstServerPath).not.toBe(SERVER_PATH);
+    expect(secondServerPath).not.toBe(SERVER_PATH);
+    expect(secondServerPath).not.toBe(firstServerPath);
+    expect(existsSync(firstServerPath)).toBe(true);
+    expect(existsSync(secondServerPath)).toBe(true);
   });
 
   it("runs the repository smoke command through MCP initialize and tools/list", () => {

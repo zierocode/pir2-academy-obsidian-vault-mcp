@@ -13,7 +13,7 @@ const temporaryRoots: string[] = [];
 function temporaryRoot(): string {
   const root = mkdtempSync(resolve(tmpdir(), "pir2-obsidian-vault-root-"));
   temporaryRoots.push(root);
-  return root;
+  return realpathSync(root);
 }
 
 async function loadVaultRootApi(): Promise<VaultRootApi | undefined> {
@@ -48,6 +48,20 @@ describe("resolveApprovedVault", () => {
     mkdirSync(vault);
     writeFileSync(resolve(vault, "note.md"), "# note\n");
     symlinkSync(vault, linkedVault, "dir");
+    const api = await loadVaultRootApi();
+
+    expect(api).toBeDefined();
+    await expect(api?.resolveApprovedVault(linkedVault)).rejects.toMatchObject({ code: "VAULT_NOT_READY" });
+  });
+
+  it("rejects a configured vault whose parent component is a symlink", async () => {
+    const root = temporaryRoot();
+    const realParent = resolve(root, "real-parent");
+    const vault = resolve(realParent, "vault");
+    const linkedParent = resolve(root, "linked-parent");
+    const linkedVault = resolve(linkedParent, "vault");
+    mkdirSync(vault, { recursive: true });
+    symlinkSync(realParent, linkedParent, "dir");
     const api = await loadVaultRootApi();
 
     expect(api).toBeDefined();

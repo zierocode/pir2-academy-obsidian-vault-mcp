@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
@@ -7,7 +7,6 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { afterEach, describe, expect, it } from "vitest";
 
 const ROOT = resolve(import.meta.dirname, "../..");
-const SERVER_PATH = resolve(ROOT, "server/index.js");
 const TSC_PATH = resolve(ROOT, "node_modules/typescript/bin/tsc");
 const temporaryRoots: string[] = [];
 
@@ -16,11 +15,14 @@ function createVault(): string {
   temporaryRoots.push(root);
   const vault = resolve(root, "vault");
   mkdirSync(vault);
-  return vault;
+  return realpathSync(vault);
 }
 
-function compileServer(): void {
-  execFileSync(process.execPath, [TSC_PATH, "--project", "tsconfig.json"], { cwd: ROOT, stdio: "pipe" });
+function compileServer(): string {
+  const outputRoot = mkdtempSync(resolve(ROOT, ".test-server-"));
+  temporaryRoots.push(outputRoot);
+  execFileSync(process.execPath, [TSC_PATH, "--project", "tsconfig.json", "--outDir", outputRoot], { cwd: ROOT, stdio: "pipe" });
+  return resolve(outputRoot, "index.js");
 }
 
 afterEach(() => {
@@ -29,12 +31,12 @@ afterEach(() => {
 
 describe("compiled Obsidian MCP stdio server", () => {
   it("initializes, lists tools, and applies only an explicitly confirmed preview without calling Obsidian", async () => {
-    compileServer();
-    expect(existsSync(SERVER_PATH)).toBe(true);
+    const serverPath = compileServer();
+    expect(existsSync(serverPath)).toBe(true);
     const vault = createVault();
     const transport = new StdioClientTransport({
       command: process.execPath,
-      args: [SERVER_PATH],
+      args: [serverPath],
       cwd: ROOT,
       env: { ...process.env, APPROVED_VAULT_ROOT: vault },
       stderr: "pipe"

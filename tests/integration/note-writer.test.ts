@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -43,7 +43,7 @@ function createVault(): string {
   temporaryRoots.push(root);
   const vault = resolve(root, "vault");
   mkdirSync(vault);
-  return vault;
+  return realpathSync(vault);
 }
 
 async function loadApi(): Promise<WriterApi | undefined> {

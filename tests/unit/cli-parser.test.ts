@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -18,7 +18,7 @@ function createVault(): string {
   mkdirSync(resolve(vault, "notes"), { recursive: true });
   writeFileSync(resolve(vault, "notes/one.md"), "# One\n");
   writeFileSync(resolve(vault, "notes/two.md"), "# Two\n");
-  return vault;
+  return realpathSync(vault);
 }
 
 async function loadApi(): Promise<ParserApi | undefined> {

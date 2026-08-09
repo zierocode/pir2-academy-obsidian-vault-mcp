@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -79,9 +79,10 @@ async function main() {
   const root = mkdtempSync(resolve(tmpdir(), "pir2-academy-obsidian-smoke-"));
   const vault = resolve(root, "vault");
   mkdirSync(vault);
+  const approvedVault = realpathSync(vault);
   const child = spawn(process.execPath, [SERVER_PATH], {
     cwd: ROOT,
-    env: { ...process.env, APPROVED_VAULT_ROOT: vault },
+    env: { ...process.env, APPROVED_VAULT_ROOT: approvedVault },
     shell: false,
     stdio: ["pipe", "pipe", "pipe"]
   });

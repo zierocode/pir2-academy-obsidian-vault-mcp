@@ -8,7 +8,7 @@ Source revision: local `codex/obsidian-vault-mcp` branch; not installed, deploye
 - Environment: local Node.js source checkout
 - Entrypoint: `server/index.js` serves the stdio MCP when `APPROVED_VAULT_ROOT` is configured
 - Package contract: `pir2-academy-obsidian-vault@0.1.0` with six MCP tools
-- Vault boundary: the configured root itself and every existing note-path component must be non-symlink; protected directories, traversal, absolute paths, Windows device aliases, trailing dot/space names, and alternate data streams are denied
+- Vault boundary: every configured-root ancestor and existing note-path component must be non-symlink; protected directories, traversal, absolute paths, Windows device aliases, trailing dot/space names, and alternate data streams are denied
 - Write safety: previews expire after ten minutes, are single-consumption on confirmed apply, are pruned and bounded in memory, recheck source hashes, back up replacements, and write atomically
 - Deploy path: intentionally absent
 

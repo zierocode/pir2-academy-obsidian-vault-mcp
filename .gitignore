@@ -24,6 +24,7 @@ __pycache__/
 # Node build and dependency artifacts
 node_modules/
 server/
+.test-server-*
 dist/
 coverage/
 *.mcpb

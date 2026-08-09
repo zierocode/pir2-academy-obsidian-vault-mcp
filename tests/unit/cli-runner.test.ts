@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -31,7 +31,7 @@ function createVault(): string {
   temporaryRoots.push(root);
   const vault = resolve(root, "vault");
   mkdirSync(vault);
-  return vault;
+  return realpathSync(vault);
 }
 
 function child(): FakeChild {

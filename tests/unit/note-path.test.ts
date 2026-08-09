@@ -17,7 +17,7 @@ function temporaryVault(): string {
   temporaryRoots.push(root);
   const vault = resolve(root, "vault");
   mkdirSync(vault);
-  return vault;
+  return realpathSync(vault);
 }
 
 async function loadVaultApi(): Promise<VaultApi | undefined> {
