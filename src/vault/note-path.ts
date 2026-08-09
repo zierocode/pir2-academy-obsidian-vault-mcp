@@ -4,6 +4,8 @@ import { VaultToolError } from "../errors.js";
 import type { ApprovedVault } from "./vault-root.js";
 
 const DENIED_DIRECTORIES = new Set([".obsidian", ".pir2-academy-backups"]);
+const WINDOWS_RESERVED_DEVICE = /^(?:con|prn|aux|nul|clock\$|conin\$|conout\$|com[1-9¹²³]|lpt[1-9¹²³])$/iu;
+const WINDOWS_FORBIDDEN_CHARACTER = /[<>:"|?*]/u;
 
 export type ResolvedNotePath = {
   absolutePath: string;
@@ -18,15 +20,28 @@ function isMissing(error: unknown): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
 }
 
-function splitNotePath(notePath: string): string[] {
-  if (!notePath || isAbsolute(notePath) || win32.isAbsolute(notePath)) throw invalidPath();
+function isUnsafeWindowsSegment(segment: string): boolean {
+  const baseName = segment.split(".", 1)[0]!.replace(/[. ]+$/u, "");
+  const hasControlCharacter = [...segment].some((character) => character.codePointAt(0)! <= 0x1f);
+  return (
+    segment.endsWith(".") ||
+    segment.endsWith(" ") ||
+    WINDOWS_FORBIDDEN_CHARACTER.test(segment) ||
+    hasControlCharacter ||
+    WINDOWS_RESERVED_DEVICE.test(baseName)
+  );
+}
 
-  const segments = notePath.split(/[\\/]+/u);
+function splitVaultPath(path: string, requireMarkdown: boolean): string[] {
+  if (!path || isAbsolute(path) || win32.isAbsolute(path)) throw invalidPath();
+
+  const segments = path.split(/[\\/]+/u);
   if (
     segments.length === 0 ||
     segments.some((segment) => segment.length === 0 || segment === "." || segment === "..") ||
     segments.some((segment) => DENIED_DIRECTORIES.has(segment.toLowerCase())) ||
-    !segments.at(-1)?.endsWith(".md")
+    segments.some(isUnsafeWindowsSegment) ||
+    (requireMarkdown && !segments.at(-1)?.endsWith(".md"))
   ) {
     throw invalidPath();
   }
@@ -34,8 +49,13 @@ function splitNotePath(notePath: string): string[] {
   return segments;
 }
 
+export function normalizeVaultFolderPath(folder: string): string {
+  const normalized = folder.replaceAll("\\", "/").replace(/\/+$/u, "");
+  return splitVaultPath(normalized, false).join("/");
+}
+
 export async function resolveNotePath(vault: ApprovedVault, notePath: string): Promise<ResolvedNotePath> {
-  const segments = splitNotePath(notePath);
+  const segments = splitVaultPath(notePath, true);
   const absolutePath = resolve(vault.realRoot, ...segments);
   const insideRoot = relative(vault.realRoot, absolutePath);
 

@@ -23,13 +23,16 @@ type Writer = {
   previewWrite(input: { path: string; content: string; mode: "create" | "replace" }): Promise<Preview>;
   applyWrite(previewId: string, confirmation: string): Promise<Receipt>;
 };
+type PreviewStore = object;
 type WriterApi = {
   resolveApprovedVault(configuredPath: string): Promise<ApprovedVault>;
+  WritePreviewStore: new (maxEntries?: number) => PreviewStore;
   createNoteWriter(options: {
     vault: ApprovedVault;
     now?: () => number;
     previewId?: () => string;
     atomicWrite?: (path: string, content: string) => Promise<void>;
+    previews?: PreviewStore;
   }): Writer;
 };
 
@@ -45,11 +48,12 @@ function createVault(): string {
 
 async function loadApi(): Promise<WriterApi | undefined> {
   try {
-    const [vaultRoot, writer] = await Promise.all([
+    const [vaultRoot, writer, previewStore] = await Promise.all([
       import("../../src/vault/vault-root.js"),
-      import("../../src/vault/note-writer.js")
+      import("../../src/vault/note-writer.js"),
+      import("../../src/vault/write-preview-store.js")
     ]);
-    return { ...vaultRoot, ...writer } as WriterApi;
+    return { ...vaultRoot, ...writer, ...previewStore } as WriterApi;
   } catch {
     return undefined;
   }
@@ -202,5 +206,89 @@ describe("safe note write transaction", () => {
     const approved = await api!.resolveApprovedVault(vault);
     const writer = api!.createNoteWriter({ vault: approved });
     await expect(writer.applyWrite("missing-preview", "ยืนยันบันทึก")).rejects.toMatchObject({ code: "WRITE_PREVIEW_REQUIRED" });
+  });
+
+  it("consumes a preview before a concurrent confirmed apply can write", async () => {
+    const vault = createVault();
+    const api = await loadApi();
+    let writes = 0;
+    let signalFirstWrite!: () => void;
+    let releaseFirstWrite!: () => void;
+    const firstWriteStarted = new Promise<void>((resolve) => {
+      signalFirstWrite = resolve;
+    });
+    const release = new Promise<void>((resolve) => {
+      releaseFirstWrite = resolve;
+    });
+
+    expect(api).toBeDefined();
+    const approved = await api!.resolveApprovedVault(vault);
+    const writer = api!.createNoteWriter({
+      vault: approved,
+      previewId: ids("preview-1"),
+      atomicWrite: async (path, content) => {
+        writes += 1;
+        if (writes > 1) throw new Error("a second apply reached the atomic writer");
+        signalFirstWrite();
+        await release;
+        writeFileSync(path, content);
+      }
+    });
+    await writer.previewWrite({ path: "new.md", content: "created\n", mode: "create" });
+
+    const firstApply = writer.applyWrite("preview-1", "ยืนยันบันทึก");
+    await firstWriteStarted;
+    const secondError = await writer.applyWrite("preview-1", "ยืนยันบันทึก").then(
+      () => undefined,
+      (error: unknown) => error
+    );
+    releaseFirstWrite();
+
+    await expect(firstApply).resolves.toMatchObject({ notePath: "new.md" });
+    expect(secondError).toMatchObject({ code: "WRITE_PREVIEW_REQUIRED" });
+    expect(writes).toBe(1);
+    expect(readFileSync(resolve(vault, "new.md"), "utf8")).toBe("created\n");
+  });
+
+  it("evicts the oldest active preview when a bounded preview store is full", async () => {
+    const vault = createVault();
+    const api = await loadApi();
+
+    expect(api).toBeDefined();
+    const approved = await api!.resolveApprovedVault(vault);
+    const writer = api!.createNoteWriter({
+      vault: approved,
+      previewId: ids("preview-1", "preview-2", "preview-3"),
+      previews: new api!.WritePreviewStore(2)
+    });
+    await writer.previewWrite({ path: "one.md", content: "one\n", mode: "create" });
+    await writer.previewWrite({ path: "two.md", content: "two\n", mode: "create" });
+    await writer.previewWrite({ path: "three.md", content: "three\n", mode: "create" });
+
+    await expect(writer.applyWrite("preview-1", "ยืนยันบันทึก")).rejects.toMatchObject({ code: "WRITE_PREVIEW_REQUIRED" });
+    await expect(writer.applyWrite("preview-2", "ยืนยันบันทึก")).resolves.toMatchObject({ notePath: "two.md" });
+    expect(existsSync(resolve(vault, "one.md"))).toBe(false);
+    expect(readFileSync(resolve(vault, "two.md"), "utf8")).toBe("two\n");
+  });
+
+  it("prunes an expired preview when a later preview is created", async () => {
+    const vault = createVault();
+    let clock = 1_000;
+    const api = await loadApi();
+
+    expect(api).toBeDefined();
+    const approved = await api!.resolveApprovedVault(vault);
+    const writer = api!.createNoteWriter({
+      vault: approved,
+      now: () => clock,
+      previewId: ids("preview-1", "preview-2"),
+      previews: new api!.WritePreviewStore(2)
+    });
+    await writer.previewWrite({ path: "expired.md", content: "expired\n", mode: "create" });
+    clock = 601_001;
+    await writer.previewWrite({ path: "fresh.md", content: "fresh\n", mode: "create" });
+
+    await expect(writer.applyWrite("preview-1", "ยืนยันบันทึก")).rejects.toMatchObject({ code: "WRITE_PREVIEW_REQUIRED" });
+    await expect(writer.applyWrite("preview-2", "ยืนยันบันทึก")).resolves.toMatchObject({ notePath: "fresh.md" });
   });
 });

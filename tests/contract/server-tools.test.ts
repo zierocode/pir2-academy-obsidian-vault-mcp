@@ -124,4 +124,34 @@ describe("Obsidian Vault MCP tools", () => {
       await server.close();
     }
   });
+
+  it.each(["CON", "notes. ", "notes:archive"])("rejects a Windows-ambiguous search folder before invoking the CLI: %s", async (folder) => {
+    const api = await loadApi();
+
+    expect(api).toBeDefined();
+    const vault = await api!.resolveApprovedVault(createVault());
+    const calls: string[][] = [];
+    const server = api!.createMcpServer({
+      vault,
+      writer: api!.createNoteWriter({ vault }),
+      runCli: async (args) => {
+        calls.push([...args]);
+        return { stdout: "[]", stderr: "", exitCode: 0 };
+      }
+    });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: "vitest", version: "1.0.0" });
+
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const result = await client.callTool({ name: "search_obsidian_notes", arguments: { query: "lesson", folder } });
+
+      expect(result).toMatchObject({ isError: true, structuredContent: { code: "INVALID_NOTE_PATH" } });
+      expect(calls).toEqual([]);
+    } finally {
+      await client.close();
+      await server.close();
+    }
+  });
 });

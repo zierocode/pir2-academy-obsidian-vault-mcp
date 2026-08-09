@@ -41,7 +41,7 @@ describe("resolveApprovedVault", () => {
     await expect(api?.resolveApprovedVault(vault)).resolves.toEqual({ root: vault, realRoot: realpathSync(vault) });
   });
 
-  it("allows a configured vault root that resolves through a symlink", async () => {
+  it("rejects a configured vault root that resolves through a symlink", async () => {
     const root = temporaryRoot();
     const vault = resolve(root, "vault");
     const linkedVault = resolve(root, "linked-vault");
@@ -51,7 +51,7 @@ describe("resolveApprovedVault", () => {
     const api = await loadVaultRootApi();
 
     expect(api).toBeDefined();
-    await expect(api?.resolveApprovedVault(linkedVault)).resolves.toEqual({ root: linkedVault, realRoot: realpathSync(vault) });
+    await expect(api?.resolveApprovedVault(linkedVault)).rejects.toMatchObject({ code: "VAULT_NOT_READY" });
   });
 
   it("fails closed when the configured vault is missing", async () => {

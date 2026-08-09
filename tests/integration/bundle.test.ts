@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { resolve } from "node:path";
+import { isAbsolute, relative, resolve, sep, win32 } from "node:path";
 import { inflateRawSync } from "node:zlib";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -11,6 +11,7 @@ const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.1.0.mcpb")
 const temporaryRoots: string[] = [];
 
 type ArchiveEntry = { path: string; data: Buffer };
+type PathApi = Pick<typeof win32, "isAbsolute" | "relative" | "sep">;
 
 function runNpm(script: "bundle" | "bundle:verify") {
   return spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["run", script], {
@@ -52,12 +53,17 @@ function findEndOfCentralDirectory(archive: Buffer): number {
   throw new Error("missing zip central directory");
 }
 
+function isInsideRoot(root: string, destination: string, path: PathApi): boolean {
+  const relation = path.relative(root, destination);
+  return relation !== "" && relation !== ".." && !relation.startsWith(`..${path.sep}`) && !path.isAbsolute(relation);
+}
+
 function extract(entries: ArchiveEntry[]): string {
   const root = mkdtempSync(resolve(tmpdir(), "pir2-obsidian-bundle-"));
   temporaryRoots.push(root);
   for (const entry of entries) {
     const destination = resolve(root, entry.path);
-    expect(destination.startsWith(`${root}/`)).toBe(true);
+    expect(isInsideRoot(root, destination, { isAbsolute, relative, sep })).toBe(true);
     mkdirSync(resolve(destination, ".."), { recursive: true });
     writeFileSync(destination, entry.data);
   }
@@ -69,6 +75,15 @@ afterEach(() => {
 });
 
 describe("deterministic MCPB bundle", () => {
+  it("recognizes a safe extraction destination with Windows path separators", () => {
+    const root = win32.resolve("C:\\temporary", "pir2-obsidian-bundle");
+    const destination = win32.resolve(root, "server", "index.js");
+    const escape = win32.resolve(root, "..", "escape.js");
+
+    expect(isInsideRoot(root, destination, win32)).toBe(true);
+    expect(isInsideRoot(root, escape, win32)).toBe(false);
+  });
+
   it("produces the exact safe archive path and byte-identical contents", () => {
     const firstRun = runNpm("bundle");
     expect(firstRun.status, firstRun.stderr).toBe(0);

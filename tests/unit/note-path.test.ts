@@ -85,6 +85,24 @@ describe("resolveNotePath", () => {
     await expect(api?.resolveNotePath(approved, notePath)).rejects.toMatchObject({ code: "INVALID_NOTE_PATH" });
   });
 
+  it.each([
+    "CON.md",
+    "aux/lesson.md",
+    "COM¹.md",
+    "PRN .md",
+    "notes./lesson.md",
+    "notes /lesson.md",
+    "lesson:archive.md",
+    "notes:archive/lesson.md"
+  ])("rejects a Windows-alias or alternate-data-stream path: %s", async (notePath) => {
+    const vault = temporaryVault();
+    const api = await loadVaultApi();
+
+    expect(api).toBeDefined();
+    const approved = await approvedVault(api!, vault);
+    await expect(api?.resolveNotePath(approved, notePath)).rejects.toMatchObject({ code: "INVALID_NOTE_PATH" });
+  });
+
   it("rejects a non-Markdown target", async () => {
     const vault = temporaryVault();
     const api = await loadVaultApi();

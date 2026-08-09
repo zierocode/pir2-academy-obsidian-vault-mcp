@@ -115,6 +115,7 @@ export function createNoteWriter(options: NoteWriterOptions): NoteWriter {
         throw new VaultToolError("NOTE_NOT_FOUND", "ไม่พบโน้ตที่ต้องการแทนที่");
       }
 
+      const createdAt = now();
       const preview: WritePreview = {
         previewId: nextPreviewId(),
         notePath: note.relativePath,
@@ -122,34 +123,32 @@ export function createNoteWriter(options: NoteWriterOptions): NoteWriter {
         beforeHash: hash(current),
         proposedHash: hash(input.content) ?? "",
         proposedContent: input.content,
-        expiresAt: now() + PREVIEW_TTL_MS
+        expiresAt: createdAt + PREVIEW_TTL_MS
       };
-      previews.put(preview);
+      previews.put(preview, createdAt);
       return preview;
     },
 
     async applyWrite(previewId: string, confirmation: string): Promise<WriteReceipt> {
-      const preview = previews.get(previewId);
-      if (!preview) throw new VaultToolError("WRITE_PREVIEW_REQUIRED", "กรุณาสร้างตัวอย่างก่อนบันทึกโน้ต");
+      if (!previews.get(previewId)) throw new VaultToolError("WRITE_PREVIEW_REQUIRED", "กรุณาสร้างตัวอย่างก่อนบันทึกโน้ต");
       if (!CONFIRMATIONS.has(confirmation)) {
         throw new VaultToolError("WRITE_NOT_CONFIRMED", "โปรดยืนยันด้วย ยืนยันบันทึก หรือ Confirm write");
       }
+      const preview = previews.take(previewId);
+      if (!preview) throw new VaultToolError("WRITE_PREVIEW_REQUIRED", "กรุณาสร้างตัวอย่างก่อนบันทึกโน้ต");
       if (now() > preview.expiresAt) {
-        previews.remove(previewId);
         throw new VaultToolError("WRITE_PREVIEW_EXPIRED", "ตัวอย่างหมดอายุแล้ว โปรดสร้างตัวอย่างใหม่");
       }
 
       const note = await resolveNotePath(options.vault, preview.notePath);
       const current = await readCurrent(note.absolutePath);
       if (hash(current) !== preview.beforeHash) {
-        previews.remove(previewId);
         throw new VaultToolError("WRITE_CONFLICT", "เนื้อหาโน้ตเปลี่ยนหลังสร้างตัวอย่าง โปรดตรวจตัวอย่างใหม่");
       }
 
       try {
         const backupPath = current === null ? undefined : await writeBackup(options.vault, preview, current, now());
         await writeAtomically(note.absolutePath, preview.proposedContent);
-        previews.remove(previewId);
         return {
           notePath: preview.notePath,
           beforeHash: preview.beforeHash,
@@ -158,7 +157,6 @@ export function createNoteWriter(options: NoteWriterOptions): NoteWriter {
         };
       } catch (error) {
         if (error instanceof VaultToolError) throw error;
-        previews.remove(previewId);
         throw new VaultToolError("OBSIDIAN_CLI_ERROR", "บันทึกโน้ตไม่สำเร็จและไฟล์เดิมยังคงอยู่");
       }
     }
