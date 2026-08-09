@@ -15,11 +15,17 @@ export type ReadNotesResult = {
   notes: ReadNote[];
 };
 
+export type ReadNoteContent = (relativePath: string) => Promise<string>;
+
 function isMissing(error: unknown): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
 }
 
-export async function readNotes(vault: ApprovedVault, paths: string[]): Promise<ReadNotesResult> {
+export async function readNotes(
+  vault: ApprovedVault,
+  paths: string[],
+  readContent?: ReadNoteContent
+): Promise<ReadNotesResult> {
   if (!Array.isArray(paths) || paths.length < 1 || paths.length > MAX_READ_NOTES) {
     throw new VaultToolError("INVALID_NOTE_PATH", "เลือกโน้ตได้ครั้งละ 1 ถึง 20 ไฟล์เท่านั้น");
   }
@@ -29,11 +35,15 @@ export async function readNotes(vault: ApprovedVault, paths: string[]): Promise<
   for (const path of paths) {
     const note = await resolveNotePath(vault, path);
     let content: string;
-    try {
-      content = await readFile(note.absolutePath, "utf8");
-    } catch (error) {
-      if (isMissing(error)) throw new VaultToolError("NOTE_NOT_FOUND", "ไม่พบโน้ตที่ระบุใน Obsidian Vault");
-      throw new VaultToolError("VAULT_NOT_READY", "ไม่สามารถอ่านโน้ตจาก Obsidian Vault ได้");
+    if (readContent) {
+      content = await readContent(note.relativePath);
+    } else {
+      try {
+        content = await readFile(note.absolutePath, "utf8");
+      } catch (error) {
+        if (isMissing(error)) throw new VaultToolError("NOTE_NOT_FOUND", "ไม่พบโน้ตที่ระบุใน Obsidian Vault");
+        throw new VaultToolError("VAULT_NOT_READY", "ไม่สามารถอ่านโน้ตจาก Obsidian Vault ได้");
+      }
     }
 
     totalBytes += Buffer.byteLength(content, "utf8");
