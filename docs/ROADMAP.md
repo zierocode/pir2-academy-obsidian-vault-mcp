@@ -9,5 +9,5 @@
 ## Deferred external gates
 
 - [x] Claude Desktop installation and disposable-vault host canary (owned by the private course repository)
-- [ ] Public GitHub repository and release `v0.1.0`
+- [x] Public GitHub repository and release `v0.1.0`
 - [ ] Clean-machine macOS/Windows and local scheduling evidence (owned by the course OS matrix)
