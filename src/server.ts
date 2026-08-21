@@ -9,20 +9,18 @@ import { VaultToolError } from "./errors.js";
 import { hashPath, writeDiagnostic, type ToolLogEvent } from "./logging.js";
 import { runObsidianCli, type CliReceipt } from "./obsidian/cli-runner.js";
 import { createApplyNoteWriteTool } from "./tools/apply-note-write.js";
-import {
-  createApplyKnowledgeBuildTool,
-  createAuditGraphTool,
-  createPreviewKnowledgeBuildTool,
-  createRollbackChangeTool
-} from "./tools/graph-contract.js";
+import { createApplyKnowledgeBuildTool } from "./tools/apply-knowledge-build.js";
+import { createAuditGraphTool, createRollbackChangeTool } from "./tools/graph-contract.js";
 import { createExploreGraphTool } from "./tools/explore-graph.js";
 import { createOpenNoteTool } from "./tools/open-note.js";
 import { createPreviewNoteWriteTool } from "./tools/preview-note-write.js";
+import { createPreviewKnowledgeBuildTool } from "./tools/preview-knowledge-build.js";
 import { createReadNotesTool } from "./tools/read-notes.js";
 import { createScanChangesTool } from "./tools/scan-changes.js";
 import { createSearchNotesTool } from "./tools/search-notes.js";
 import { createVaultStatusTool } from "./tools/vault-status.js";
 import { createNoteWriter, type NoteWriter } from "./vault/note-writer.js";
+import type { KnowledgeWriter } from "./vault/knowledge-writer.js";
 import { resolveApprovedVault, type ApprovedVault } from "./vault/vault-root.js";
 
 const SAFE_ERROR_MESSAGES: Record<ToolFailureCode, string> = {
@@ -47,6 +45,7 @@ const SAFE_ERROR_MESSAGES: Record<ToolFailureCode, string> = {
 export type ToolServices = {
   vault: ApprovedVault;
   writer: NoteWriter;
+  knowledgeWriter?: KnowledgeWriter;
   runCli(args: readonly string[]): Promise<CliReceipt>;
 };
 

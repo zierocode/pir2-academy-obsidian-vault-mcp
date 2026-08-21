@@ -3,7 +3,7 @@ import { isAbsolute, join, relative, resolve, sep, win32 } from "node:path";
 import { VaultToolError } from "../errors.js";
 import type { ApprovedVault } from "./vault-root.js";
 
-const DENIED_DIRECTORIES = new Set([".obsidian", ".pir2-academy-backups"]);
+const DENIED_DIRECTORIES = new Set([".obsidian", ".pir-acdm", ".pir2-academy-backups"]);
 const WINDOWS_RESERVED_DEVICE = /^(?:con|prn|aux|nul|clock\$|conin\$|conout\$|com[1-9¹²³]|lpt[1-9¹²³])$/iu;
 const WINDOWS_FORBIDDEN_CHARACTER = /[<>:"|?*]/u;
 

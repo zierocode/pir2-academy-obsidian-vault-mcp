@@ -12,7 +12,7 @@ const OUTPUT_PATH = resolve(ROOT, "dist", BUNDLE_NAME);
 const TSC_PATH = resolve(ROOT, "node_modules/typescript/bin/tsc");
 const MCPB_CLI_PATH = resolve(ROOT, "node_modules/@anthropic-ai/mcpb/dist/cli/cli.js");
 const OMITTED_DIRECTORIES = new Set([".git", ".github", "docs", "examples", "node_modules", "src", "test", "tests", "__tests__"]);
-const RUNTIME_PACKAGES = ["@modelcontextprotocol/sdk", "write-file-atomic", "zod"];
+const RUNTIME_PACKAGES = ["@modelcontextprotocol/sdk", "write-file-atomic", "yaml", "zod"];
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);

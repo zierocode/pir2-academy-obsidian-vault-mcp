@@ -77,6 +77,7 @@ function validateEntries(entries, archive) {
   assert(paths.includes("LICENSE"), "bundle license is missing");
   assert(paths.includes("node_modules/@modelcontextprotocol/sdk/package.json"), "MCP SDK closure is missing");
   assert(paths.includes("node_modules/write-file-atomic/package.json"), "atomic write closure is missing");
+  assert(paths.includes("node_modules/yaml/package.json"), "YAML parser closure is missing");
   assert(paths.includes("node_modules/zod/package.json"), "schema closure is missing");
   assert(!paths.some((path) => path.startsWith("src/") || path.startsWith("tests/") || path.endsWith(".map") || /\.d\.(?:ts|cts|mts)$/u.test(path)), "source or type artifacts are bundled");
   assert(!paths.some((path) => path.startsWith(".env") || path.includes("package-lock") || path.endsWith(".mcpb")), "unexpected local artifact is bundled");

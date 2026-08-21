@@ -109,6 +109,7 @@ describe("deterministic MCPB bundle", () => {
       "server/index.js",
       "node_modules/@modelcontextprotocol/sdk/package.json",
       "node_modules/write-file-atomic/package.json",
+      "node_modules/yaml/package.json",
       "node_modules/zod/package.json"
     ]));
     expect(paths.some((path) => path.startsWith("src/") || path.startsWith("tests/") || path.endsWith(".map") || /\.d\.(?:ts|cts|mts)$/u.test(path))).toBe(false);
