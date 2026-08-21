@@ -1,3 +1,4 @@
+import { formatRuntimeReadyDiagnostic, parseRuntimeConfig, type RuntimeConfig } from "./config/runtime-config.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
@@ -56,7 +57,7 @@ export type ToolCatalogOptions = {
 };
 
 export function buildServerIdentity(): { name: string; version: string } {
-  return { name: "pir2-academy-obsidian-vault", version: "0.1.0" };
+  return { name: "pir-acdm-obsidian-vault", version: "0.3.0" };
 }
 
 export function createToolCatalog(services: ToolServices, options: ToolCatalogOptions = {}): UnboundToolDefinition[] {
@@ -116,12 +117,13 @@ export function createMcpServer(services: ToolServices, options: ToolCatalogOpti
   return server;
 }
 
-export async function createProductionToolServices(environment: NodeJS.ProcessEnv = process.env): Promise<ToolServices> {
-  const configuredRoot = environment.APPROVED_VAULT_ROOT?.trim();
-  if (!configuredRoot) {
-    throw new VaultToolError("VAULT_NOT_READY", "ยังไม่ได้กำหนด Obsidian Vault ที่อนุญาต");
-  }
-  const vault = await resolveApprovedVault(configuredRoot);
+export async function createProductionToolServices(
+  environment: NodeJS.ProcessEnv = process.env,
+  argv: readonly string[] = process.argv.slice(2)
+): Promise<ToolServices> {
+  const runtimeConfig = runtimeConfigForProcess(environment, argv);
+  const vault = await resolveApprovedVault(runtimeConfig.vaultRoot);
+  process.stderr.write(`${formatRuntimeReadyDiagnostic(runtimeConfig, vault.realRoot)}\n`);
   return {
     vault,
     writer: createNoteWriter({ vault }),
@@ -129,12 +131,18 @@ export async function createProductionToolServices(environment: NodeJS.ProcessEn
   };
 }
 
-export async function createProductionMcpServer(environment: NodeJS.ProcessEnv = process.env): Promise<Server> {
-  return createMcpServer(await createProductionToolServices(environment));
+export async function createProductionMcpServer(
+  environment: NodeJS.ProcessEnv = process.env,
+  argv: readonly string[] = process.argv.slice(2)
+): Promise<Server> {
+  return createMcpServer(await createProductionToolServices(environment, argv));
 }
 
-export async function runStdioServer(environment: NodeJS.ProcessEnv = process.env): Promise<void> {
-  const server = await createProductionMcpServer(environment);
+export async function runStdioServer(
+  environment: NodeJS.ProcessEnv = process.env,
+  argv: readonly string[] = process.argv.slice(2)
+): Promise<void> {
+  const server = await createProductionMcpServer(environment, argv);
   const transport = new StdioServerTransport();
   let closing: Promise<void> | undefined;
   const close = (): Promise<void> => {
@@ -161,6 +169,17 @@ export async function runStdioServer(environment: NodeJS.ProcessEnv = process.en
     process.off("SIGTERM", closeOnSignal);
   };
   await server.connect(transport);
+}
+
+function runtimeConfigForProcess(environment: NodeJS.ProcessEnv, argv: readonly string[]): RuntimeConfig {
+  if (argv.length > 0) return parseRuntimeConfig(argv);
+
+  // Keep the pre-Plugin smoke harness working while the bundled Plugin supplies argv.
+  const configuredRoot = environment.APPROVED_VAULT_ROOT?.trim();
+  if (!configuredRoot) {
+    throw new VaultToolError("VAULT_NOT_READY", "ยังไม่ได้กำหนด Obsidian Vault ที่อนุญาต");
+  }
+  return { vaultRoot: configuredRoot, pluginData: environment.CLAUDE_PLUGIN_DATA?.trim() ?? "" };
 }
 
 function successResult(message: string, data: unknown): ToolCallResult {
