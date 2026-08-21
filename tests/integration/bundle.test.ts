@@ -7,7 +7,7 @@ import { inflateRawSync } from "node:zlib";
 import { afterEach, describe, expect, it } from "vitest";
 
 const ROOT = resolve(import.meta.dirname, "../..");
-const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.1.0.mcpb");
+const BUNDLE_PATH = resolve(ROOT, "dist/pir-acdm-obsidian-vault-0.3.2.mcpb");
 const temporaryRoots: string[] = [];
 
 type ArchiveEntry = { path: string; data: Buffer };
@@ -118,8 +118,8 @@ describe("deterministic MCPB bundle", () => {
     const manifest = JSON.parse(entries.find((entry) => entry.path === "manifest.json")!.data.toString("utf8")) as Record<string, unknown>;
     expect(manifest).toMatchObject({
       manifest_version: "0.4",
-      name: "pir2-academy-obsidian-vault",
-      version: "0.1.0",
+      name: "pir-acdm-obsidian-vault",
+      version: "0.3.2",
       compatibility: { platforms: ["darwin", "win32"], runtimes: { node: ">=20" } },
       server: { entry_point: "server/index.js" }
     });

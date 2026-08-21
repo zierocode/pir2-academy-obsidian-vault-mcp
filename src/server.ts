@@ -2,6 +2,7 @@ import { formatRuntimeReadyDiagnostic, parseRuntimeConfig, type RuntimeConfig } 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { failure, success, type ToolFailureCode, type ToolName, type ToolResult } from "./contracts.js";
 import { VaultToolError } from "./errors.js";
@@ -56,11 +57,15 @@ export type ToolCatalogOptions = {
   diagnostic?: (event: ToolLogEvent) => void;
 };
 
+export type RootAwareMcpServerOptions = ToolCatalogOptions & {
+  createServices?: (vaultRoot: string) => Promise<ToolServices>;
+};
+
 export function buildServerIdentity(): { name: string; version: string } {
-  return { name: "pir-acdm-obsidian-vault", version: "0.3.0" };
+  return { name: "pir-acdm-obsidian-vault", version: "0.3.2" };
 }
 
-export function createToolCatalog(services: ToolServices, options: ToolCatalogOptions = {}): UnboundToolDefinition[] {
+function createToolCatalog(resolveServices: () => Promise<ToolServices>, options: ToolCatalogOptions = {}): UnboundToolDefinition[] {
   const diagnostic = options.diagnostic ?? writeDiagnostic;
   const definitions = [
     createVaultStatusTool(),
@@ -76,13 +81,13 @@ export function createToolCatalog(services: ToolServices, options: ToolCatalogOp
     handler: async (input, _context) => {
       const startedAt = Date.now();
       let result: ToolCallResult;
-      const context: ToolExecutionContext = {
-        services,
-        success: successResult,
-        failure: failureResult
-      };
 
       try {
+        const context: ToolExecutionContext = {
+          services: await resolveServices(),
+          success: successResult,
+          failure: failureResult
+        };
         const parsed = definition.inputSchema.safeParse(input);
         result = parsed.success
           ? await definition.handler(parsed.data, context)
@@ -98,7 +103,14 @@ export function createToolCatalog(services: ToolServices, options: ToolCatalogOp
 }
 
 export function createMcpServer(services: ToolServices, options: ToolCatalogOptions = {}): Server {
-  const catalog = createToolCatalog(services, options);
+  return createMcpServerWithResolver(async () => services, options);
+}
+
+function createMcpServerWithResolver(
+  resolveServices: () => Promise<ToolServices>,
+  options: ToolCatalogOptions = {}
+): Server {
+  const catalog = createToolCatalog(resolveServices, options);
   const server = new Server(buildServerIdentity(), { capabilities: { tools: {} } });
 
   server.setRequestHandler(ListToolsRequestSchema, () => ({
@@ -117,6 +129,35 @@ export function createMcpServer(services: ToolServices, options: ToolCatalogOpti
   return server;
 }
 
+export function createRootAwareMcpServer(options: RootAwareMcpServerOptions = {}): Server {
+  let services: Promise<ToolServices> | undefined;
+  const createServices = options.createServices ?? createProductionToolServicesForRoot;
+  const resolveServices = (): Promise<ToolServices> => {
+    services ??= (async () => {
+      let roots: Awaited<ReturnType<Server["listRoots"]>>["roots"];
+      try {
+        ({ roots } = await server.listRoots());
+      } catch {
+        throw new VaultToolError("VAULT_NOT_READY", "Cowork ไม่ได้ส่งโฟลเดอร์ Project หลักให้ MCP");
+      }
+      if (roots.length !== 1) {
+        throw new VaultToolError("VAULT_NOT_READY", "ต้องเลือก Vault หลักเพียงหนึ่งโฟลเดอร์ใน Cowork");
+      }
+      try {
+        const uri = new URL(roots[0]!.uri);
+        if (uri.protocol !== "file:") throw new Error("unsupported root URI");
+        return await createServices(fileURLToPath(uri));
+      } catch (error) {
+        if (error instanceof VaultToolError) throw error;
+        throw new VaultToolError("VAULT_NOT_READY", "Cowork ส่งโฟลเดอร์ Project หลักที่ใช้ไม่ได้");
+      }
+    })();
+    return services;
+  };
+  const server = createMcpServerWithResolver(resolveServices, options);
+  return server;
+}
+
 export async function createProductionToolServices(
   environment: NodeJS.ProcessEnv = process.env,
   argv: readonly string[] = process.argv.slice(2)
@@ -131,11 +172,25 @@ export async function createProductionToolServices(
   };
 }
 
+async function createProductionToolServicesForRoot(vaultRoot: string): Promise<ToolServices> {
+  const vault = await resolveApprovedVault(vaultRoot);
+  const runtimeConfig = { vaultRoot, pluginData: "" };
+  process.stderr.write(`${formatRuntimeReadyDiagnostic(runtimeConfig, vault.realRoot)}\n`);
+  return {
+    vault,
+    writer: createNoteWriter({ vault }),
+    runCli: (args) => runObsidianCli(args, { vault })
+  };
+}
+
 export async function createProductionMcpServer(
   environment: NodeJS.ProcessEnv = process.env,
   argv: readonly string[] = process.argv.slice(2)
 ): Promise<Server> {
-  return createMcpServer(await createProductionToolServices(environment, argv));
+  if (argv.length > 0 || environment.APPROVED_VAULT_ROOT?.trim()) {
+    return createMcpServer(await createProductionToolServices(environment, argv));
+  }
+  return createRootAwareMcpServer();
 }
 
 export async function runStdioServer(

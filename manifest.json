@@ -1,13 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/main/schemas/mcpb-manifest-v0.4.schema.json",
   "manifest_version": "0.4",
-  "name": "pir2-academy-obsidian-vault",
-  "display_name": "PiR2 Academy — Obsidian Vault",
-  "version": "0.1.0",
-  "description": "MCP สำหรับอ่านและเขียน Obsidian Markdown อย่างปลอดภัย โดย PiR2 Academy",
+  "name": "pir-acdm-obsidian-vault",
+  "display_name": "PiR-ACDM — Obsidian Second Brain MCP",
+  "version": "0.3.2",
+  "description": "MCP สำหรับอ่านและเขียน Obsidian Vault อย่างปลอดภัย โดย PiR-ACDM",
   "long_description": "MCP แบบ local สำหรับอ่าน ค้นหา เปิด และเขียน Obsidian Markdown ภายใน Vault ที่ผู้เรียนเลือกเพียงหนึ่งแห่ง โดยต้อง preview และยืนยันก่อนบันทึกทุกครั้ง",
   "author": {
-    "name": "PiR2 Academy"
+    "name": "PiR-ACDM"
   },
   "icon": "assets/icons/icon.png",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "obsidian",
     "markdown",
     "local",
-    "pir2-academy"
+    "pir-acdm"
   ],
   "compatibility": {
     "platforms": [
@@ -35,15 +35,15 @@
         "${__dirname}/server/index.js"
       ],
       "env": {
-        "APPROVED_VAULT_ROOT": "${user_config.approved_vault_root}"
+        "APPROVED_VAULT_ROOT": "${user_config.vault_root}"
       }
     }
   },
   "user_config": {
-    "approved_vault_root": {
+    "vault_root": {
       "type": "directory",
-      "title": "โฟลเดอร์ Obsidian Vault ที่อนุญาต",
-      "description": "เลือก Obsidian Vault เพียงหนึ่งโฟลเดอร์ที่ MCP นี้อ่านและเขียนได้",
+      "title": "Obsidian Vault root (เลือก 1 โฟลเดอร์)",
+      "description": "กด Browse แล้วเลือกโฟลเดอร์หลักของ Vault ที่ต้องการให้ MCP อ่านและเขียน",
       "required": true,
       "multiple": false
     }

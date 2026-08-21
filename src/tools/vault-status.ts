@@ -1,5 +1,6 @@
 import { TOOL_DEFINITIONS } from "../contracts.js";
 import type { UnboundToolDefinition } from "../server.js";
+import { access } from "node:fs/promises";
 import { z } from "zod";
 
 const inputSchema = z.object({}).strict();
@@ -10,8 +11,12 @@ export function createVaultStatusTool(): UnboundToolDefinition {
     description: TOOL_DEFINITIONS[0]!.description,
     inputSchema,
     handler: async (_input, context) => {
-      await context.services.runCli(["vault", "info=name"]);
-      return context.success("Obsidian Vault พร้อมใช้งานครับ", { ready: true });
+      await access(context.services.vault.realRoot);
+      return context.success("Second Brain Vault พร้อมใช้งานครับ", {
+        ready: true,
+        mode: "direct",
+        obsidian_cli_required: false
+      });
     }
   };
 }

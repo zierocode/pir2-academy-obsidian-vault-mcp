@@ -5,7 +5,7 @@ import { inflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 
 const ROOT = resolve(import.meta.dirname, "../..");
-const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.1.0.mcpb");
+const BUNDLE_PATH = resolve(ROOT, "dist/pir-acdm-obsidian-vault-0.3.2.mcpb");
 
 function bundleManifest(): Record<string, unknown> {
   if (!process.env.npm_execpath) throw new Error("npm_execpath is required for repository script tests");
@@ -52,10 +52,10 @@ describe("keyring-free package configuration", () => {
 
     expect(serialized).not.toMatch(/credential|keyring|oauth|token|secret|password/);
     expect(manifest.user_config).toEqual({
-      approved_vault_root: expect.objectContaining({ type: "directory", required: true, multiple: false })
+      vault_root: expect.objectContaining({ type: "directory", required: true, multiple: false })
     });
     expect((manifest.server as { mcp_config?: { env?: Record<string, string> } }).mcp_config?.env).toEqual({
-      APPROVED_VAULT_ROOT: "${user_config.approved_vault_root}"
+      APPROVED_VAULT_ROOT: "${user_config.vault_root}"
     });
   }, 30_000);
 });

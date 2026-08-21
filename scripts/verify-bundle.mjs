@@ -7,7 +7,7 @@ import { McpbManifestSchema } from "@anthropic-ai/mcpb/schemas/0.4";
 import { SECRET_PATTERNS } from "./secret-scan-policy.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.1.0.mcpb");
+const BUNDLE_PATH = resolve(ROOT, "dist/pir-acdm-obsidian-vault-0.3.2.mcpb");
 const EXPECTED_TOOLS = [
   "obsidian_vault_status",
   "search_obsidian_notes",
@@ -84,7 +84,7 @@ function validateManifest(entries) {
   const manifest = JSON.parse(manifestEntry.data.toString("utf8"));
   const packageJson = JSON.parse(packageEntry.data.toString("utf8"));
   assert(McpbManifestSchema.safeParse(manifest).success, "MCPB manifest schema validation failed");
-  assert(manifest.name === "pir2-academy-obsidian-vault" && manifest.version === "0.1.0", "manifest identity drift");
+  assert(manifest.name === "pir-acdm-obsidian-vault" && manifest.version === "0.3.2", "manifest identity drift");
   assert(packageJson.name === manifest.name && packageJson.version === manifest.version, "package identity drift");
   assert(manifest.server?.entry_point === "server/index.js", "unexpected server entry point");
   assert(entries.some((entry) => entry.path === manifest.icon), "manifest icon target is missing");
