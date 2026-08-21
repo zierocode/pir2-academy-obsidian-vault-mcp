@@ -42,6 +42,12 @@ export type KnowledgeReceipt = {
   receiptId: string;
   changedFiles: string[];
   backupPaths: string[];
+  files: Array<{
+    path: string;
+    beforeHash: string | null;
+    proposedHash: string;
+    backupPath?: string;
+  }>;
   graph: { nodes: number; edges: number; healthy: boolean };
 };
 
@@ -117,6 +123,7 @@ export function createKnowledgeWriter(options: KnowledgeWriterOptions): Knowledg
       const receiptId = nextReceiptId();
       const backupRoot = resolve(options.vault.realRoot, ".pir-acdm", "backups", receiptId);
       const backups: string[] = [];
+      const fileReceipts: KnowledgeReceipt["files"] = [];
       const written: PlannedFile[] = [];
       try {
         for (const file of pending.files) {
@@ -130,9 +137,18 @@ export function createKnowledgeWriter(options: KnowledgeWriterOptions): Knowledg
           }
           await writeTarget(file.absolutePath, file.proposedContent);
           written.push(file);
+          const backupPath = file.beforeContent === null
+            ? undefined
+            : `.pir-acdm/backups/${receiptId}/${file.path}`;
+          fileReceipts.push({
+            path: file.path,
+            beforeHash: file.beforeHash,
+            proposedHash: file.proposedHash,
+            ...(backupPath ? { backupPath } : {})
+          });
         }
 
-        const graph = buildGraph(await currentGraphInputs(options.vault));
+        const graph = buildGraph(await loadVaultGraphInputs(options.vault));
         await saveGraphIndex(options.vault, graph, now);
         const registry = await readSourceRegistry(options.vault);
         const scan = await scanVaultChanges(options.vault, registry, now);
@@ -141,6 +157,7 @@ export function createKnowledgeWriter(options: KnowledgeWriterOptions): Knowledg
           receiptId,
           changedFiles: pending.files.map((file) => file.path),
           backupPaths: backups,
+          files: fileReceipts,
           graph: {
             nodes: graph.nodes.length,
             edges: graph.edges.length,
@@ -171,13 +188,13 @@ export function createKnowledgeWriter(options: KnowledgeWriterOptions): Knowledg
 }
 
 async function proposedGraphInputs(vault: ApprovedVault, planned: readonly PlannedFile[]): Promise<GraphInput[]> {
-  const inputs = await currentGraphInputs(vault);
+  const inputs = await loadVaultGraphInputs(vault);
   const byPath = new Map(inputs.map((input) => [input.path, input]));
   for (const file of planned) byPath.set(file.path, { path: file.path, content: file.proposedContent });
   return [...byPath.values()];
 }
 
-async function currentGraphInputs(vault: ApprovedVault): Promise<GraphInput[]> {
+export async function loadVaultGraphInputs(vault: ApprovedVault): Promise<GraphInput[]> {
   const inputs: GraphInput[] = [];
   async function visit(directory: string, relativeDirectory: string): Promise<void> {
     const handle = await opendir(directory);
