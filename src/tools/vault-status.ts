@@ -1,6 +1,7 @@
 import { toolDescription } from "../contracts.js";
 import type { UnboundToolDefinition } from "../server.js";
 import { access } from "node:fs/promises";
+import { classifyVaultState } from "../vault/vault-state.js";
 import { z } from "zod";
 
 const inputSchema = z.object({}).strict();
@@ -12,10 +13,15 @@ export function createVaultStatusTool(): UnboundToolDefinition {
     inputSchema,
     handler: async (_input, context) => {
       await access(context.services.vault.realRoot);
+      const state = await classifyVaultState(context.services.vault);
       return context.success("Second Brain Vault พร้อมใช้งานครับ", {
         ready: true,
         mode: "direct",
-        obsidian_cli_required: false
+        obsidian_cli_required: false,
+        state: state.state,
+        pending_changes: state.pendingChanges,
+        changes: state.changes,
+        graph: state.graph
       });
     }
   };

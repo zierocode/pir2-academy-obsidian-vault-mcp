@@ -1,20 +1,33 @@
-# PiR2 Academy Obsidian Vault MCP
+# PiR-ACDM — Obsidian Second Brain MCP
 
-MCP แบบ local สำหรับอ่าน ค้นหา เปิด และเขียน Obsidian Markdown ภายใน Vault ที่ผู้เรียนเลือกเพียงหนึ่งแห่งอย่างปลอดภัย
+MCP แบบ local สำหรับสร้าง ตรวจ รีเฟรช ค้นหา และย้อนคืน Knowledge Graph ภายใน Obsidian Vault ที่ผู้เรียนเลือกเพียงหนึ่งแห่งอย่างปลอดภัย
 
 ## ขอบเขต
 
-Bundle นี้มี six tools: status, search, read, preview write, confirmed apply write, และ open. การตีความ meeting, decision/action extraction, และ weekly brief อยู่ใน Skill ของคอร์ส ไม่ใช่ MCP นี้
+Bundle นี้มี 12 tools: status, change scan, graph-native search, graph explore,
+read, knowledge-build preview/apply, single-note preview/apply, graph audit,
+receipt-bound rollback และ open. MCP จัดการไฟล์ กราฟ ลิงก์ แบ็กลิงก์
+ธุรกรรม และหลักฐานเชิงโครงสร้าง ส่วนการตีความ meeting, requirement,
+decision, weekly brief และงานเฉพาะโดเมนอยู่ใน Skill ไม่ได้ hardcode ใน MCP
 
-ทุก read/write ถูกจำกัดอยู่ใน approved vault root เดียว และปฏิเสธ `.obsidian`, `.pir2-academy-backups`, traversal, absolute path, symlink, และไฟล์ที่ไม่ใช่ Markdown. การเขียนต้อง preview ก่อน แล้วใช้ `ยืนยันบันทึก` หรือ `Confirm write` ที่ยังใหม่เท่านั้น
+ทุก read/write ถูกจำกัดอยู่ใน approved Vault root เดียว และปฏิเสธ
+`.obsidian`, `.pir-acdm`, `.pir2-academy-backups`, traversal, absolute path,
+symlink และ path ที่กำกวมบน Windows. การเขียนต้อง preview ก่อน แล้วใช้
+`ยืนยันบันทึก` หรือ `Confirm write` ที่ยังใหม่เท่านั้น ธุรกรรมหลายไฟล์ตรวจ
+hash ทุก target ก่อนเขียน สร้าง backup และหยุดทั้งชุดเมื่อพบ conflict
 
-v1 ไม่มี delete, rename, move, bulk write, plugin install, shell command, remote sync, cloud vault, หรือ credential flow
+รุ่นนี้ไม่มีการลบ ย้าย หรือเปลี่ยนชื่อไฟล์ตามคำสั่งทั่วไป ไม่มี shell command,
+remote sync, cloud Vault หรือ credential flow การลบไฟล์อนุญาตเฉพาะ rollback
+ของไฟล์ที่ transaction receipt ระบุว่า MCP เป็นผู้สร้าง และต้องไม่มีการแก้ไขภายหลัง
 
 ## Requirements
 
-- Node.js 20+
-- Obsidian installer 1.12.7+ with Command line interface enabled
-- Obsidian app available on the learner machine
+- Claude Desktop/Cowork ที่รองรับ MCPB
+- macOS หรือ Windows ตาม `manifest.json`
+- Obsidian เป็นทางเลือกสำหรับ Graph View, Backlinks และการแก้โน้ตด้วยตนเอง
+
+MCPB ใช้ Node runtime ที่ Claude Desktop จัดให้ ผู้เรียนไม่ต้องติดตั้ง Node หรือ
+เปิด Obsidian CLI เพื่อใช้ status, scan, search, read, build, audit หรือ rollback
 
 ## Maintainer commands
 
@@ -33,7 +46,7 @@ make doctor
 ```
 
 `npm run bundle` writes the local deterministic release candidate to
-`dist/pir2-academy-obsidian-vault-0.1.0.mcpb` and prints its SHA-256 checksum.
+`dist/pir-acdm-obsidian-vault-0.4.0.mcpb` and prints its SHA-256 checksum.
 `npm run bundle:verify` validates its MCPB v0.4 metadata, runtime dependency
 closure, executable entry point, and exclusions. These commands do not publish,
 install, or upload the bundle.
