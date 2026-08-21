@@ -32,7 +32,14 @@ export function createPreviewKnowledgeBuildTool(): UnboundToolDefinition {
       return context.success("สร้างตัวอย่าง Knowledge Graph แล้วครับ โปรดตรวจใน Canvas ก่อนยืนยัน", {
         preview_id: preview.previewId,
         mode: preview.mode,
-        summary: { files: preview.fileCount, nodes: preview.nodeCount, edges: preview.edgeCount },
+        summary: {
+          files: preview.fileCount,
+          nodes: preview.nodeCount,
+          edges: preview.edgeCount,
+          healthy: preview.healthy,
+          issues: preview.auditIssues.length
+        },
+        audit_issues: preview.auditIssues,
         files: preview.files.map((file) => ({
           path: file.path,
           before_hash: file.beforeHash,

@@ -4,6 +4,7 @@ import { dirname, resolve, sep } from "node:path";
 import writeFileAtomic from "write-file-atomic";
 import { VaultToolError } from "../errors.js";
 import { buildGraph, type GraphInput } from "../graph/graph-builder.js";
+import { auditGraph, type GraphAuditIssue } from "../graph/audit.js";
 import { saveGraphIndex } from "../graph/graph-store.js";
 import { scanVaultChanges } from "./change-scanner.js";
 import { resolveNotePath } from "./note-path.js";
@@ -35,6 +36,8 @@ export type KnowledgePreview = {
   fileCount: number;
   nodeCount: number;
   edgeCount: number;
+  healthy: boolean;
+  auditIssues: GraphAuditIssue[];
   expiresAt: number;
 };
 
@@ -48,7 +51,7 @@ export type KnowledgeReceipt = {
     proposedHash: string;
     backupPath?: string;
   }>;
-  graph: { nodes: number; edges: number; healthy: boolean };
+  graph: { nodes: number; edges: number; healthy: boolean; issues: number };
 };
 
 export type KnowledgeWriter = {
@@ -74,6 +77,12 @@ export function createKnowledgeWriter(options: KnowledgeWriterOptions): Knowledg
   return {
     async previewBuild(input): Promise<KnowledgePreview> {
       if (input.notes.length > 200) throw new VaultToolError("GRAPH_LIMIT_EXCEEDED", "too many note changes");
+      if (input.managedLinks.length > 0) {
+        throw new VaultToolError(
+          "GRAPH_CONFLICT",
+          "managed_links cannot create virtual graph edges; include real Obsidian wikilinks in note content"
+        );
+      }
       const planned: PlannedFile[] = [];
       const seen = new Set<string>();
       for (const note of input.notes) {
@@ -93,6 +102,7 @@ export function createKnowledgeWriter(options: KnowledgeWriterOptions): Knowledg
         });
       }
       const graph = buildGraph(await proposedGraphInputs(options.vault, planned));
+      const audit = auditGraph(graph);
       const createdAt = now();
       const preview: KnowledgePreview = {
         previewId: nextPreviewId(),
@@ -101,6 +111,8 @@ export function createKnowledgeWriter(options: KnowledgeWriterOptions): Knowledg
         fileCount: planned.length,
         nodeCount: graph.nodes.length,
         edgeCount: graph.edges.length,
+        healthy: audit.healthy,
+        auditIssues: audit.issues,
         expiresAt: createdAt + PREVIEW_TTL_MS
       };
       previews.set(preview.previewId, preview);
@@ -149,6 +161,7 @@ export function createKnowledgeWriter(options: KnowledgeWriterOptions): Knowledg
         }
 
         const graph = buildGraph(await loadVaultGraphInputs(options.vault));
+        const audit = auditGraph(graph);
         await saveGraphIndex(options.vault, graph, now);
         const registry = await readSourceRegistry(options.vault);
         const scan = await scanVaultChanges(options.vault, registry, now);
@@ -161,7 +174,8 @@ export function createKnowledgeWriter(options: KnowledgeWriterOptions): Knowledg
           graph: {
             nodes: graph.nodes.length,
             edges: graph.edges.length,
-            healthy: graph.edges.every((edge) => !edge.unresolved)
+            healthy: audit.healthy,
+            issues: audit.issues.length
           }
         };
         const receiptPath = resolve(options.vault.realRoot, ".pir-acdm", "receipts", `${receiptId}.json`);

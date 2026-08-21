@@ -19,4 +19,18 @@ describe("Obsidian graph audit", () => {
       expect.objectContaining({ code: "ORPHAN_NOTE", path: "C.md" })
     ]));
   });
+
+  it("does not treat the conventional root README as an orphan knowledge note", async () => {
+    const { auditGraph } = await import("../../src/graph/audit.js");
+    const graph = buildGraph([
+      { path: "README.md", content: "# วิธีใช้ Vault" },
+      { path: "โครงการ.md", content: "[[ข้อมูลลูกค้า]]" },
+      { path: "ข้อมูลลูกค้า.md", content: "[[โครงการ]]" }
+    ]);
+
+    const result = auditGraph(graph);
+
+    expect(result.healthy).toBe(true);
+    expect(result.issues).not.toContainEqual(expect.objectContaining({ path: "README.md" }));
+  });
 });
