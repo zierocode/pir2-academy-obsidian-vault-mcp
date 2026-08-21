@@ -7,14 +7,15 @@ import { McpbManifestSchema } from "@anthropic-ai/mcpb/schemas/0.4";
 import { SECRET_PATTERNS } from "./secret-scan-policy.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.1.0.mcpb");
+const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.2.0.mcpb");
 const EXPECTED_TOOLS = [
   "obsidian_vault_status",
   "search_obsidian_notes",
   "read_obsidian_notes",
   "preview_obsidian_note_write",
   "apply_obsidian_note_write",
-  "open_obsidian_note"
+  "open_obsidian_note",
+  "render_second_brain_workspace"
 ];
 
 function assert(condition, message) {
@@ -70,8 +71,10 @@ function validateEntries(entries, archive) {
   assert(paths.includes("assets/icons/icon.png"), "bundle icon is missing");
   assert(paths.includes("LICENSE"), "bundle license is missing");
   assert(paths.includes("node_modules/@modelcontextprotocol/sdk/package.json"), "MCP SDK closure is missing");
+  assert(paths.includes("node_modules/@modelcontextprotocol/ext-apps/package.json"), "MCP Apps closure is missing");
   assert(paths.includes("node_modules/write-file-atomic/package.json"), "atomic write closure is missing");
   assert(paths.includes("node_modules/zod/package.json"), "schema closure is missing");
+  assert(paths.includes("server/app-ui/index.html"), "Second Brain UI resource is missing");
   assert(!paths.some((path) => path.startsWith("src/") || path.startsWith("tests/") || path.endsWith(".map") || /\.d\.(?:ts|cts|mts)$/u.test(path)), "source or type artifacts are bundled");
   assert(!paths.some((path) => path.startsWith(".env") || path.includes("package-lock") || path.endsWith(".mcpb")), "unexpected local artifact is bundled");
   assert(!archive.includes(Buffer.from(ROOT)), "bundle contains an absolute source path");
@@ -84,7 +87,7 @@ function validateManifest(entries) {
   const manifest = JSON.parse(manifestEntry.data.toString("utf8"));
   const packageJson = JSON.parse(packageEntry.data.toString("utf8"));
   assert(McpbManifestSchema.safeParse(manifest).success, "MCPB manifest schema validation failed");
-  assert(manifest.name === "pir2-academy-obsidian-vault" && manifest.version === "0.1.0", "manifest identity drift");
+  assert(manifest.name === "pir2-academy-obsidian-vault" && manifest.version === "0.2.0", "manifest identity drift");
   assert(packageJson.name === manifest.name && packageJson.version === manifest.version, "package identity drift");
   assert(manifest.server?.entry_point === "server/index.js", "unexpected server entry point");
   assert(entries.some((entry) => entry.path === manifest.icon), "manifest icon target is missing");

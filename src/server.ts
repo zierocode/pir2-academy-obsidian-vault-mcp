@@ -1,8 +1,15 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import {
+  CallToolRequestSchema,
+  ListResourcesRequestSchema,
+  ListToolsRequestSchema,
+  ReadResourceRequestSchema
+} from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { failure, success, type ToolFailureCode, type ToolName, type ToolResult } from "./contracts.js";
+import { createRenderSecondBrainWorkspaceTool } from "./app/render-workspace.js";
+import { SECOND_BRAIN_HTML, SECOND_BRAIN_RESOURCE } from "./app/ui-resource.js";
 import { VaultToolError } from "./errors.js";
 import { hashPath, writeDiagnostic, type ToolLogEvent } from "./logging.js";
 import { runObsidianCli, type CliReceipt } from "./obsidian/cli-runner.js";
@@ -48,6 +55,7 @@ export type UnboundToolDefinition = {
   name: ToolName;
   description: string;
   inputSchema: z.ZodType;
+  uiResourceUri?: string;
   handler(input: unknown, context: ToolExecutionContext): Promise<ToolCallResult>;
 };
 
@@ -56,7 +64,7 @@ export type ToolCatalogOptions = {
 };
 
 export function buildServerIdentity(): { name: string; version: string } {
-  return { name: "pir2-academy-obsidian-vault", version: "0.1.0" };
+  return { name: "pir2-academy-obsidian-vault", version: "0.2.0" };
 }
 
 export function createToolCatalog(services: ToolServices, options: ToolCatalogOptions = {}): UnboundToolDefinition[] {
@@ -67,7 +75,8 @@ export function createToolCatalog(services: ToolServices, options: ToolCatalogOp
     createReadNotesTool(),
     createPreviewNoteWriteTool(),
     createApplyNoteWriteTool(),
-    createOpenNoteTool()
+    createOpenNoteTool(),
+    createRenderSecondBrainWorkspaceTool()
   ];
 
   return definitions.map((definition) => ({
@@ -98,15 +107,31 @@ export function createToolCatalog(services: ToolServices, options: ToolCatalogOp
 
 export function createMcpServer(services: ToolServices, options: ToolCatalogOptions = {}): Server {
   const catalog = createToolCatalog(services, options);
-  const server = new Server(buildServerIdentity(), { capabilities: { tools: {} } });
+  const server = new Server(buildServerIdentity(), { capabilities: { tools: {}, resources: {} } });
 
   server.setRequestHandler(ListToolsRequestSchema, () => ({
     tools: catalog.map((tool) => ({
       name: tool.name,
       description: tool.description,
-      inputSchema: z.toJSONSchema(tool.inputSchema)
+      inputSchema: z.toJSONSchema(tool.inputSchema),
+      ...(tool.uiResourceUri ? { _meta: { ui: { resourceUri: tool.uiResourceUri } } } : {})
     }))
   }));
+  server.setRequestHandler(ListResourcesRequestSchema, () => ({
+    resources: [SECOND_BRAIN_RESOURCE]
+  }));
+  server.setRequestHandler(ReadResourceRequestSchema, (request) => {
+    if (request.params.uri !== SECOND_BRAIN_RESOURCE.uri) {
+      throw new VaultToolError("INVALID_NOTE_PATH", "ไม่รู้จัก UI resource");
+    }
+    return {
+      contents: [{
+        uri: SECOND_BRAIN_RESOURCE.uri,
+        mimeType: SECOND_BRAIN_RESOURCE.mimeType,
+        text: SECOND_BRAIN_HTML
+      }]
+    };
+  });
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const tool = catalog.find((candidate) => candidate.name === request.params.name);
     return tool

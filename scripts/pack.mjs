@@ -7,12 +7,12 @@ import { fileURLToPath } from "node:url";
 import { deflateRawSync } from "node:zlib";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const BUNDLE_NAME = "pir2-academy-obsidian-vault-0.1.0.mcpb";
+const BUNDLE_NAME = "pir2-academy-obsidian-vault-0.2.0.mcpb";
 const OUTPUT_PATH = resolve(ROOT, "dist", BUNDLE_NAME);
 const TSC_PATH = resolve(ROOT, "node_modules/typescript/bin/tsc");
 const MCPB_CLI_PATH = resolve(ROOT, "node_modules/@anthropic-ai/mcpb/dist/cli/cli.js");
 const OMITTED_DIRECTORIES = new Set([".git", ".github", "docs", "examples", "node_modules", "src", "test", "tests", "__tests__"]);
-const RUNTIME_PACKAGES = ["@modelcontextprotocol/sdk", "write-file-atomic", "zod"];
+const RUNTIME_PACKAGES = ["@modelcontextprotocol/sdk", "@modelcontextprotocol/ext-apps", "write-file-atomic", "zod"];
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -54,10 +54,10 @@ function validateManifest() {
 function validateIdentity() {
   const packageJson = readJson(resolve(ROOT, "package.json"));
   const manifest = readJson(resolve(ROOT, "manifest.json"));
-  assert(packageJson.name === "pir2-academy-obsidian-vault" && packageJson.version === "0.1.0", "package identity drift");
+  assert(packageJson.name === "pir2-academy-obsidian-vault" && packageJson.version === "0.2.0", "package identity drift");
   assert(manifest.name === packageJson.name && manifest.version === packageJson.version, "manifest identity drift");
   assert(manifest.server?.entry_point === "server/index.js", "unexpected server entry point");
-  assert(Array.isArray(manifest.tools) && manifest.tools.length === 6, "unexpected tool catalog");
+  assert(Array.isArray(manifest.tools) && manifest.tools.length === 7, "unexpected tool catalog");
   assert(typeof manifest.icon === "string" && existsSync(resolve(ROOT, manifest.icon)), "bundle icon is unavailable");
   return { packageJson, manifest };
 }
@@ -220,6 +220,7 @@ function main() {
     }
     addTree(entries, resolve(ROOT, "assets", "icons"), "assets/icons");
     addTree(entries, build.serverPath, "server");
+    addTree(entries, resolve(ROOT, "server/app-ui"), "server/app-ui");
     addDependencyClosure(entries);
     const archive = createDeterministicZip(entries);
     mkdirSync(dirname(OUTPUT_PATH), { recursive: true });

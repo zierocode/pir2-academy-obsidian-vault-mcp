@@ -49,7 +49,7 @@ afterEach(() => {
 });
 
 describe("Obsidian Vault MCP tools", () => {
-  it("initializes through the real MCP SDK and exposes the six safe tool schemas", async () => {
+  it("initializes through the real MCP SDK and exposes six vault tools plus the UI tool", async () => {
     const api = await loadApi();
 
     expect(api).toBeDefined();
@@ -79,7 +79,8 @@ describe("Obsidian Vault MCP tools", () => {
         "read_obsidian_notes",
         "preview_obsidian_note_write",
         "apply_obsidian_note_write",
-        "open_obsidian_note"
+        "open_obsidian_note",
+        "render_second_brain_workspace"
       ]);
       expect(listed.tools.every((tool) => /[ก-๙]/u.test(tool.description ?? ""))).toBe(true);
       const schemas = Object.fromEntries(listed.tools.map((tool) => [tool.name, tool.inputSchema]));

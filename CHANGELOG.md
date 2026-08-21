@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0 - 2026-08-21
+
+- Added the inline Second Brain Workspace MCP App with five bounded view states.
+- Preserved the six existing vault tools and Preview/Confirm write boundary.
+
 ## 0.1.0 - 2026-08-09
 
 - Added the local source contract for `pir2-academy-obsidian-vault@0.1.0`.

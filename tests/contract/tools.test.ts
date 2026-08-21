@@ -6,7 +6,8 @@ const EXPECTED_TOOLS = [
   "read_obsidian_notes",
   "preview_obsidian_note_write",
   "apply_obsidian_note_write",
-  "open_obsidian_note"
+  "open_obsidian_note",
+  "render_second_brain_workspace"
 ];
 
 async function loadToolContracts(): Promise<Record<string, unknown> | undefined> {
@@ -18,7 +19,7 @@ async function loadToolContracts(): Promise<Record<string, unknown> | undefined>
 }
 
 describe("tool contract", () => {
-  it("exposes exactly the six safe Obsidian tools", async () => {
+  it("preserves the six safe vault tools and adds one bounded UI tool", async () => {
     const contracts = await loadToolContracts();
 
     expect(contracts).toBeDefined();

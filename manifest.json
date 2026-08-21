@@ -3,7 +3,7 @@
   "manifest_version": "0.4",
   "name": "pir2-academy-obsidian-vault",
   "display_name": "PiR2 Academy — Obsidian Vault",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP สำหรับอ่านและเขียน Obsidian Markdown อย่างปลอดภัย โดย PiR2 Academy",
   "long_description": "MCP แบบ local สำหรับอ่าน ค้นหา เปิด และเขียน Obsidian Markdown ภายใน Vault ที่ผู้เรียนเลือกเพียงหนึ่งแห่ง โดยต้อง preview และยืนยันก่อนบันทึกทุกครั้ง",
   "author": {
@@ -72,6 +72,10 @@
     {
       "name": "open_obsidian_note",
       "description": "เปิดโน้ตที่ระบุในแอป Obsidian โดยไม่แก้เนื้อหา"
+    },
+    {
+      "name": "render_second_brain_workspace",
+      "description": "แสดงตัวเลือก รีวิว ผลลัพธ์ และการยืนยันของ Second Brain แบบโต้ตอบ"
     }
   ]
 }

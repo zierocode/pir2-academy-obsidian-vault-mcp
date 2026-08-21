@@ -21,7 +21,8 @@ export const TOOL_NAMES = [
   "read_obsidian_notes",
   "preview_obsidian_note_write",
   "apply_obsidian_note_write",
-  "open_obsidian_note"
+  "open_obsidian_note",
+  "render_second_brain_workspace"
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];
@@ -37,7 +38,8 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
   { name: "read_obsidian_notes", description: "อ่านโน้ต Markdown ที่ระบุภายในขนาดปลอดภัย" },
   { name: "preview_obsidian_note_write", description: "สร้างตัวอย่างการเขียนโน้ตโดยยังไม่แก้ไฟล์จริง" },
   { name: "apply_obsidian_note_write", description: "บันทึกตัวอย่างล่าสุดหลังยืนยันด้วยข้อความที่กำหนด" },
-  { name: "open_obsidian_note", description: "เปิดโน้ตที่ระบุในแอป Obsidian โดยไม่แก้เนื้อหา" }
+  { name: "open_obsidian_note", description: "เปิดโน้ตที่ระบุในแอป Obsidian โดยไม่แก้เนื้อหา" },
+  { name: "render_second_brain_workspace", description: "แสดงตัวเลือก รีวิว ผลลัพธ์ และการยืนยันของ Second Brain แบบโต้ตอบ" }
 ];
 
 export function success<T>(message: string, data: T): ToolResult<T> {

@@ -4,7 +4,7 @@ MCP แบบ local สำหรับอ่าน ค้นหา เปิด 
 
 ## ขอบเขต
 
-Bundle นี้มี six tools: status, search, read, preview write, confirmed apply write, และ open. การตีความ meeting, decision/action extraction, และ weekly brief อยู่ใน Skill ของคอร์ส ไม่ใช่ MCP นี้
+Bundle นี้มี six safe vault tools: status, search, read, preview write, confirmed apply write, และ open พร้อม `render_second_brain_workspace` สำหรับ UI แบบโต้ตอบใน Claude การตีความ meeting, decision/action extraction, และ weekly brief อยู่ใน Skill ของคอร์ส ไม่ใช่ MCP นี้
 
 ทุก read/write ถูกจำกัดอยู่ใน approved vault root เดียว และปฏิเสธ `.obsidian`, `.pir2-academy-backups`, traversal, absolute path, symlink, และไฟล์ที่ไม่ใช่ Markdown. การเขียนต้อง preview ก่อน แล้วใช้ `ยืนยันบันทึก` หรือ `Confirm write` ที่ยังใหม่เท่านั้น
 
@@ -33,7 +33,7 @@ make doctor
 ```
 
 `npm run bundle` writes the local deterministic release candidate to
-`dist/pir2-academy-obsidian-vault-0.1.0.mcpb` and prints its SHA-256 checksum.
+`dist/pir2-academy-obsidian-vault-0.2.0.mcpb` and prints its SHA-256 checksum.
 `npm run bundle:verify` validates its MCPB v0.4 metadata, runtime dependency
 closure, executable entry point, and exclusions. These commands do not publish,
 install, or upload the bundle.

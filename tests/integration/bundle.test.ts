@@ -7,7 +7,7 @@ import { inflateRawSync } from "node:zlib";
 import { afterEach, describe, expect, it } from "vitest";
 
 const ROOT = resolve(import.meta.dirname, "../..");
-const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.1.0.mcpb");
+const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.2.0.mcpb");
 const temporaryRoots: string[] = [];
 
 type ArchiveEntry = { path: string; data: Buffer };
@@ -107,7 +107,9 @@ describe("deterministic MCPB bundle", () => {
       "SECURITY.md",
       "assets/icons/icon.png",
       "server/index.js",
+      "server/app-ui/index.html",
       "node_modules/@modelcontextprotocol/sdk/package.json",
+      "node_modules/@modelcontextprotocol/ext-apps/package.json",
       "node_modules/write-file-atomic/package.json",
       "node_modules/zod/package.json"
     ]));
@@ -119,7 +121,7 @@ describe("deterministic MCPB bundle", () => {
     expect(manifest).toMatchObject({
       manifest_version: "0.4",
       name: "pir2-academy-obsidian-vault",
-      version: "0.1.0",
+      version: "0.2.0",
       compatibility: { platforms: ["darwin", "win32"], runtimes: { node: ">=20" } },
       server: { entry_point: "server/index.js" }
     });
@@ -129,7 +131,8 @@ describe("deterministic MCPB bundle", () => {
       "read_obsidian_notes",
       "preview_obsidian_note_write",
       "apply_obsidian_note_write",
-      "open_obsidian_note"
+      "open_obsidian_note",
+      "render_second_brain_workspace"
     ]);
   }, 30_000);
 

@@ -1,6 +1,6 @@
 {
   "name": "pir2-academy-obsidian-vault",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP แบบ local สำหรับอ่านและเขียน Obsidian Markdown อย่างปลอดภัย โดย PiR2 Academy",
   "license": "MIT",
   "type": "module",
@@ -16,17 +16,20 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "npm run build:ui && npm run build:server",
+    "build:ui": "vite build",
+    "build:server": "tsc --project tsconfig.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "check": "npm run lint && npm run typecheck && npm test",
     "smoke": "node scripts/smoke.mjs",
     "scan:secrets": "node scripts/scan-secrets.mjs",
-    "bundle": "node scripts/pack.mjs",
+    "bundle": "npm run build:ui && node scripts/pack.mjs",
     "bundle:verify": "node scripts/verify-bundle.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/ext-apps": "1.7.5",
     "@modelcontextprotocol/sdk": "1.30.0",
     "write-file-atomic": "5.0.1",
     "zod": "4.4.3"
@@ -40,6 +43,8 @@
     "globals": "17.9.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.66.0",
+    "vite": "8.2.2",
+    "vite-plugin-singlefile": "2.3.3",
     "vitest": "4.1.10"
   }
 }
