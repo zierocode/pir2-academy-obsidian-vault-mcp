@@ -3,16 +3,6 @@ import { VaultToolError } from "../errors.js";
 import type { UnboundToolDefinition } from "../server.js";
 import { z } from "zod";
 
-const exploreSchema = z.object({
-  path: z.string().min(1).max(1_024).optional(),
-  query: z.string().min(1).max(500).optional(),
-  direction: z.enum(["outgoing", "backlinks", "both"]).default("both"),
-  max_depth: z.number().int().min(1).max(2).default(1),
-  limit: z.number().int().min(1).max(200).default(50)
-}).strict().refine((value) => Boolean(value.path || value.query), {
-  message: "path or query is required"
-});
-
 const previewBuildSchema = z.object({
   mode: z.enum(["initialize", "refresh", "repair"]),
   profile: z.record(z.string(), z.unknown()).optional(),
@@ -41,17 +31,6 @@ const rollbackSchema = z.object({
   receipt_id: z.string().min(1).max(128),
   confirmation: z.string().min(1).max(64)
 }).strict();
-
-export function createExploreGraphTool(): UnboundToolDefinition {
-  return {
-    name: "explore_obsidian_graph",
-    description: toolDescription("explore_obsidian_graph"),
-    inputSchema: exploreSchema,
-    handler: async () => {
-      throw new VaultToolError("GRAPH_UNINITIALIZED", "graph is not initialized");
-    }
-  };
-}
 
 export function createPreviewKnowledgeBuildTool(): UnboundToolDefinition {
   return {

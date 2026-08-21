@@ -12,10 +12,10 @@ import { createApplyNoteWriteTool } from "./tools/apply-note-write.js";
 import {
   createApplyKnowledgeBuildTool,
   createAuditGraphTool,
-  createExploreGraphTool,
   createPreviewKnowledgeBuildTool,
   createRollbackChangeTool
 } from "./tools/graph-contract.js";
+import { createExploreGraphTool } from "./tools/explore-graph.js";
 import { createOpenNoteTool } from "./tools/open-note.js";
 import { createPreviewNoteWriteTool } from "./tools/preview-note-write.js";
 import { createReadNotesTool } from "./tools/read-notes.js";
