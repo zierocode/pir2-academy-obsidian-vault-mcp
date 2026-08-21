@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { deflateRawSync } from "node:zlib";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const BUNDLE_NAME = "pir-acdm-obsidian-vault-0.3.2.mcpb";
+const BUNDLE_NAME = "pir-acdm-obsidian-vault-0.4.0.mcpb";
 const OUTPUT_PATH = resolve(ROOT, "dist", BUNDLE_NAME);
 const TSC_PATH = resolve(ROOT, "node_modules/typescript/bin/tsc");
 const MCPB_CLI_PATH = resolve(ROOT, "node_modules/@anthropic-ai/mcpb/dist/cli/cli.js");
@@ -54,10 +54,10 @@ function validateManifest() {
 function validateIdentity() {
   const packageJson = readJson(resolve(ROOT, "package.json"));
   const manifest = readJson(resolve(ROOT, "manifest.json"));
-  assert(packageJson.name === "pir-acdm-obsidian-vault" && packageJson.version === "0.3.2", "package identity drift");
+  assert(packageJson.name === "pir-acdm-obsidian-vault" && packageJson.version === "0.4.0", "package identity drift");
   assert(manifest.name === packageJson.name && manifest.version === packageJson.version, "manifest identity drift");
   assert(manifest.server?.entry_point === "server/index.js", "unexpected server entry point");
-  assert(Array.isArray(manifest.tools) && manifest.tools.length === 6, "unexpected tool catalog");
+  assert(Array.isArray(manifest.tools) && manifest.tools.length === 12, "unexpected tool catalog");
   assert(typeof manifest.icon === "string" && existsSync(resolve(ROOT, manifest.icon)), "bundle icon is unavailable");
   return { packageJson, manifest };
 }

@@ -7,7 +7,7 @@ import { inflateRawSync } from "node:zlib";
 import { afterEach, describe, expect, it } from "vitest";
 
 const ROOT = resolve(import.meta.dirname, "../..");
-const BUNDLE_PATH = resolve(ROOT, "dist/pir-acdm-obsidian-vault-0.3.2.mcpb");
+const BUNDLE_PATH = resolve(ROOT, "dist/pir-acdm-obsidian-vault-0.4.0.mcpb");
 const temporaryRoots: string[] = [];
 
 type ArchiveEntry = { path: string; data: Buffer };
@@ -119,16 +119,22 @@ describe("deterministic MCPB bundle", () => {
     expect(manifest).toMatchObject({
       manifest_version: "0.4",
       name: "pir-acdm-obsidian-vault",
-      version: "0.3.2",
+      version: "0.4.0",
       compatibility: { platforms: ["darwin", "win32"], runtimes: { node: ">=20" } },
       server: { entry_point: "server/index.js" }
     });
     expect((manifest.tools as Array<{ name: string }>).map((tool) => tool.name)).toEqual([
       "obsidian_vault_status",
-      "search_obsidian_notes",
+      "scan_obsidian_changes",
+      "search_obsidian_knowledge",
+      "explore_obsidian_graph",
       "read_obsidian_notes",
+      "preview_obsidian_knowledge_build",
+      "apply_obsidian_knowledge_build",
       "preview_obsidian_note_write",
       "apply_obsidian_note_write",
+      "audit_obsidian_graph",
+      "rollback_obsidian_change",
       "open_obsidian_note"
     ]);
   }, 30_000);

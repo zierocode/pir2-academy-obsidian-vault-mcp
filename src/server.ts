@@ -9,6 +9,14 @@ import { VaultToolError } from "./errors.js";
 import { hashPath, writeDiagnostic, type ToolLogEvent } from "./logging.js";
 import { runObsidianCli, type CliReceipt } from "./obsidian/cli-runner.js";
 import { createApplyNoteWriteTool } from "./tools/apply-note-write.js";
+import {
+  createApplyKnowledgeBuildTool,
+  createAuditGraphTool,
+  createExploreGraphTool,
+  createPreviewKnowledgeBuildTool,
+  createRollbackChangeTool,
+  createScanChangesTool
+} from "./tools/graph-contract.js";
 import { createOpenNoteTool } from "./tools/open-note.js";
 import { createPreviewNoteWriteTool } from "./tools/preview-note-write.js";
 import { createReadNotesTool } from "./tools/read-notes.js";
@@ -25,6 +33,14 @@ const SAFE_ERROR_MESSAGES: Record<ToolFailureCode, string> = {
   WRITE_PREVIEW_EXPIRED: "ตัวอย่างหมดอายุแล้วครับ โปรดสร้างตัวอย่างใหม่ก่อนครับ",
   WRITE_CONFLICT: "โน้ตเปลี่ยนหลังสร้างตัวอย่างครับ โปรดตรวจและสร้างตัวอย่างใหม่ครับ",
   WRITE_NOT_CONFIRMED: "ยังไม่ได้ยืนยันการบันทึกครับ โปรดส่ง ยืนยันบันทึก หรือ Confirm write ครับ",
+  GRAPH_UNINITIALIZED: "Vault นี้ยังไม่ได้สร้าง Knowledge Graph ครับ โปรดตรวจแผนเริ่มต้นก่อนครับ",
+  GRAPH_STALE: "Knowledge Graph มีข้อมูลใหม่ที่ยังไม่ได้รีเฟรชครับ",
+  GRAPH_CONFLICT: "Knowledge Graph มีข้อมูลขัดแย้งครับ โปรดตรวจตัวเลือกแก้ไขก่อนครับ",
+  GRAPH_LIMIT_EXCEEDED: "Knowledge Graph เกินขอบเขตปลอดภัยของงานนี้ครับ",
+  BUILD_PREVIEW_REQUIRED: "ยังไม่มีตัวอย่างการสร้าง Knowledge Graph ครับ โปรดสร้างตัวอย่างก่อนครับ",
+  BUILD_PREVIEW_EXPIRED: "ตัวอย่างการสร้าง Knowledge Graph หมดอายุแล้วครับ โปรดสร้างใหม่ครับ",
+  ROLLBACK_NOT_FOUND: "ไม่พบรายการเปลี่ยนแปลงที่ย้อนคืนได้ครับ",
+  ROLLBACK_CONFLICT: "มีข้อมูลใหม่หลังรายการเดิม จึงยังย้อนคืนอย่างปลอดภัยไม่ได้ครับ",
   OBSIDIAN_CLI_ERROR: "ยังใช้ Obsidian CLI ไม่ได้ครับ โปรดเปิด Obsidian และเปิดใช้ CLI แล้วลองใหม่ครับ"
 };
 
@@ -62,17 +78,23 @@ export type RootAwareMcpServerOptions = ToolCatalogOptions & {
 };
 
 export function buildServerIdentity(): { name: string; version: string } {
-  return { name: "pir-acdm-obsidian-vault", version: "0.3.2" };
+  return { name: "pir-acdm-obsidian-vault", version: "0.4.0" };
 }
 
 function createToolCatalog(resolveServices: () => Promise<ToolServices>, options: ToolCatalogOptions = {}): UnboundToolDefinition[] {
   const diagnostic = options.diagnostic ?? writeDiagnostic;
   const definitions = [
     createVaultStatusTool(),
+    createScanChangesTool(),
     createSearchNotesTool(),
+    createExploreGraphTool(),
     createReadNotesTool(),
+    createPreviewKnowledgeBuildTool(),
+    createApplyKnowledgeBuildTool(),
     createPreviewNoteWriteTool(),
     createApplyNoteWriteTool(),
+    createAuditGraphTool(),
+    createRollbackChangeTool(),
     createOpenNoteTool()
   ];
 

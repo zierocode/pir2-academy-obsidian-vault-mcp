@@ -1,4 +1,4 @@
-import { TOOL_DEFINITIONS } from "../contracts.js";
+import { toolDescription } from "../contracts.js";
 import type { UnboundToolDefinition } from "../server.js";
 import { z } from "zod";
 
@@ -11,7 +11,7 @@ const inputSchema = z.object({
 export function createPreviewNoteWriteTool(): UnboundToolDefinition {
   return {
     name: "preview_obsidian_note_write",
-    description: TOOL_DEFINITIONS[3]!.description,
+    description: toolDescription("preview_obsidian_note_write"),
     inputSchema,
     handler: async (input, context) => {
       const preview = await context.services.writer.previewWrite(input as z.infer<typeof inputSchema>);

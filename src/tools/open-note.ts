@@ -1,4 +1,4 @@
-import { TOOL_DEFINITIONS } from "../contracts.js";
+import { toolDescription } from "../contracts.js";
 import { resolveNotePath } from "../vault/note-path.js";
 import type { UnboundToolDefinition } from "../server.js";
 import { z } from "zod";
@@ -10,7 +10,7 @@ const inputSchema = z.object({
 export function createOpenNoteTool(): UnboundToolDefinition {
   return {
     name: "open_obsidian_note",
-    description: TOOL_DEFINITIONS[5]!.description,
+    description: toolDescription("open_obsidian_note"),
     inputSchema,
     handler: async (input, context) => {
       const values = input as z.infer<typeof inputSchema>;

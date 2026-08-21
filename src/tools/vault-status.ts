@@ -1,4 +1,4 @@
-import { TOOL_DEFINITIONS } from "../contracts.js";
+import { toolDescription } from "../contracts.js";
 import type { UnboundToolDefinition } from "../server.js";
 import { access } from "node:fs/promises";
 import { z } from "zod";
@@ -8,7 +8,7 @@ const inputSchema = z.object({}).strict();
 export function createVaultStatusTool(): UnboundToolDefinition {
   return {
     name: "obsidian_vault_status",
-    description: TOOL_DEFINITIONS[0]!.description,
+    description: toolDescription("obsidian_vault_status"),
     inputSchema,
     handler: async (_input, context) => {
       await access(context.services.vault.realRoot);

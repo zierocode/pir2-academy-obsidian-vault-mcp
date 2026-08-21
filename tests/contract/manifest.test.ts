@@ -20,14 +20,14 @@ describe("MCPB manifest contract", () => {
 
     expect(packageJson).toMatchObject({
       name: "pir-acdm-obsidian-vault",
-      version: "0.3.2",
+      version: "0.4.0",
       engines: { node: ">=20" }
     });
     expect(manifest).toMatchObject({
       manifest_version: "0.4",
       name: "pir-acdm-obsidian-vault",
       display_name: "PiR-ACDM — Obsidian Second Brain MCP",
-      version: "0.3.2"
+      version: "0.4.0"
     });
   });
 

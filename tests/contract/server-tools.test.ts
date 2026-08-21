@@ -137,7 +137,7 @@ describe("Obsidian Vault MCP tools", () => {
     }
   });
 
-  it("initializes through the real MCP SDK and exposes the six safe tool schemas", async () => {
+  it("initializes through the real MCP SDK and exposes the twelve graph-native tool schemas", async () => {
     const api = await loadApi();
 
     expect(api).toBeDefined();
@@ -163,25 +163,45 @@ describe("Obsidian Vault MCP tools", () => {
 
       expect(listed.tools.map((tool) => tool.name)).toEqual([
         "obsidian_vault_status",
-        "search_obsidian_notes",
+        "scan_obsidian_changes",
+        "search_obsidian_knowledge",
+        "explore_obsidian_graph",
         "read_obsidian_notes",
+        "preview_obsidian_knowledge_build",
+        "apply_obsidian_knowledge_build",
         "preview_obsidian_note_write",
         "apply_obsidian_note_write",
+        "audit_obsidian_graph",
+        "rollback_obsidian_change",
         "open_obsidian_note"
       ]);
       expect(listed.tools.every((tool) => /[ก-๙]/u.test(tool.description ?? ""))).toBe(true);
       const schemas = Object.fromEntries(listed.tools.map((tool) => [tool.name, tool.inputSchema]));
-      expect(schemas.search_obsidian_notes).toMatchObject({
+      expect(schemas.scan_obsidian_changes).toMatchObject({
+        type: "object",
+        properties: { mode: { enum: ["preflight", "full"] } }
+      });
+      expect(schemas.search_obsidian_knowledge).toMatchObject({
         type: "object",
         required: ["query"],
-        properties: { limit: { minimum: 1, maximum: 50 } }
+        properties: {
+          limit: { minimum: 1, maximum: 50 },
+          max_depth: { minimum: 0, maximum: 2 }
+        }
+      });
+      expect(schemas.explore_obsidian_graph).toMatchObject({
+        type: "object",
+        properties: {
+          direction: { enum: ["outgoing", "backlinks", "both"] },
+          max_depth: { minimum: 1, maximum: 2 }
+        }
       });
       expect(schemas.read_obsidian_notes).toMatchObject({
         required: ["paths"],
         properties: { paths: { minItems: 1, maxItems: 20 } }
       });
 
-      const search = await client.callTool({ name: "search_obsidian_notes", arguments: { query: "meeting" } });
+      const search = await client.callTool({ name: "search_obsidian_knowledge", arguments: { query: "meeting" } });
       const read = await client.callTool({ name: "read_obsidian_notes", arguments: { paths: ["notes/meeting.md"] } });
       const status = await client.callTool({ name: "obsidian_vault_status", arguments: {} });
       const preview = await client.callTool({
@@ -228,7 +248,7 @@ describe("Obsidian Vault MCP tools", () => {
       await client.connect(clientTransport);
 
       const status = await client.callTool({ name: "obsidian_vault_status", arguments: {} });
-      const search = await client.callTool({ name: "search_obsidian_notes", arguments: { query: "Meeting facts" } });
+      const search = await client.callTool({ name: "search_obsidian_knowledge", arguments: { query: "Meeting facts" } });
       const read = await client.callTool({ name: "read_obsidian_notes", arguments: { paths: ["notes/meeting.md"] } });
 
       expect(status.structuredContent).toMatchObject({ ok: true, data: { ready: true, mode: "direct" } });
@@ -270,7 +290,7 @@ describe("Obsidian Vault MCP tools", () => {
     try {
       await server.connect(serverTransport);
       await client.connect(clientTransport);
-      const result = await client.callTool({ name: "search_obsidian_notes", arguments: { query: "lesson", folder } });
+      const result = await client.callTool({ name: "search_obsidian_knowledge", arguments: { query: "lesson", folder } });
 
       expect(result).toMatchObject({ isError: true, structuredContent: { code: "INVALID_NOTE_PATH" } });
       expect(calls).toEqual([]);
