@@ -14,12 +14,12 @@ import {
   createAuditGraphTool,
   createExploreGraphTool,
   createPreviewKnowledgeBuildTool,
-  createRollbackChangeTool,
-  createScanChangesTool
+  createRollbackChangeTool
 } from "./tools/graph-contract.js";
 import { createOpenNoteTool } from "./tools/open-note.js";
 import { createPreviewNoteWriteTool } from "./tools/preview-note-write.js";
 import { createReadNotesTool } from "./tools/read-notes.js";
+import { createScanChangesTool } from "./tools/scan-changes.js";
 import { createSearchNotesTool } from "./tools/search-notes.js";
 import { createVaultStatusTool } from "./tools/vault-status.js";
 import { createNoteWriter, type NoteWriter } from "./vault/note-writer.js";
