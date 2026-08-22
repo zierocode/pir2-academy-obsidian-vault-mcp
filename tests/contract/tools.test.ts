@@ -6,6 +6,10 @@ const EXPECTED_TOOLS = [
   "search_obsidian_knowledge",
   "explore_obsidian_graph",
   "read_obsidian_notes",
+  "inspect_obsidian_sources",
+  "read_obsidian_source_content",
+  "preview_obsidian_source_intake",
+  "apply_obsidian_source_intake",
   "preview_obsidian_knowledge_build",
   "apply_obsidian_knowledge_build",
   "preview_obsidian_note_write",
@@ -24,7 +28,7 @@ async function loadToolContracts(): Promise<Record<string, unknown> | undefined>
 }
 
 describe("tool contract", () => {
-  it("exposes exactly the twelve graph-native Obsidian tools", async () => {
+  it("exposes exactly the sixteen graph-native Obsidian tools", async () => {
     const contracts = await loadToolContracts();
 
     expect(contracts).toBeDefined();

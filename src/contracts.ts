@@ -15,6 +15,13 @@ export type ToolCode =
   | "BUILD_PREVIEW_EXPIRED"
   | "ROLLBACK_NOT_FOUND"
   | "ROLLBACK_CONFLICT"
+  | "SOURCE_NOT_ACCESSIBLE"
+  | "SOURCE_UNSUPPORTED"
+  | "SOURCE_LIMIT_EXCEEDED"
+  | "SOURCE_PREVIEW_REQUIRED"
+  | "SOURCE_PREVIEW_EXPIRED"
+  | "SOURCE_CHANGED"
+  | "SOURCE_COPY_CONFLICT"
   | "OBSIDIAN_CLI_ERROR";
 
 export type ToolFailureCode = Exclude<ToolCode, "OK">;
@@ -29,6 +36,10 @@ export const TOOL_NAMES = [
   "search_obsidian_knowledge",
   "explore_obsidian_graph",
   "read_obsidian_notes",
+  "inspect_obsidian_sources",
+  "read_obsidian_source_content",
+  "preview_obsidian_source_intake",
+  "apply_obsidian_source_intake",
   "preview_obsidian_knowledge_build",
   "apply_obsidian_knowledge_build",
   "preview_obsidian_note_write",
@@ -51,6 +62,10 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
   { name: "search_obsidian_knowledge", description: "ค้นหาความรู้พร้อมเส้นทางความสัมพันธ์จากลิงก์และแบ็กลิงก์ใน Vault" },
   { name: "explore_obsidian_graph", description: "สำรวจโน้ตที่เชื่อมโยงกันในกราฟ Obsidian แบบจำกัดขอบเขต" },
   { name: "read_obsidian_notes", description: "อ่านโน้ต Markdown ที่ระบุภายในขนาดปลอดภัย" },
+  { name: "inspect_obsidian_sources", description: "ตรวจไฟล์ต้นทางหลายรูปแบบแบบอ่านอย่างเดียวก่อนนำเข้า Second Brain" },
+  { name: "read_obsidian_source_content", description: "อ่านเนื้อหาและตำแหน่งอ้างอิงของไฟล์ต้นทางที่ตรวจแล้วแบบจำกัดขอบเขต" },
+  { name: "preview_obsidian_source_intake", description: "สร้างตัวอย่างการนำไฟล์ต้นทางและความรู้เข้า Vault โดยยังไม่เขียนไฟล์" },
+  { name: "apply_obsidian_source_intake", description: "นำเข้าไฟล์ต้นทางและความรู้ตามตัวอย่างล่าสุดหลังได้รับคำยืนยัน" },
   { name: "preview_obsidian_knowledge_build", description: "สร้างตัวอย่างการสร้างหรือรีเฟรช Knowledge Graph โดยยังไม่เขียนไฟล์" },
   { name: "apply_obsidian_knowledge_build", description: "ใช้แผน Knowledge Graph ที่ตรวจแล้วหลังได้รับคำยืนยันที่ถูกต้อง" },
   { name: "preview_obsidian_note_write", description: "สร้างตัวอย่างการเขียนโน้ตโดยยังไม่แก้ไฟล์จริง" },

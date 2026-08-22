@@ -16,6 +16,10 @@ import { createOpenNoteTool } from "./tools/open-note.js";
 import { createPreviewNoteWriteTool } from "./tools/preview-note-write.js";
 import { createPreviewKnowledgeBuildTool } from "./tools/preview-knowledge-build.js";
 import { createReadNotesTool } from "./tools/read-notes.js";
+import { createInspectSourcesTool } from "./tools/inspect-sources.js";
+import { createReadSourceContentTool } from "./tools/read-source-content.js";
+import { createPreviewSourceIntakeTool } from "./tools/preview-source-intake.js";
+import { createApplySourceIntakeTool } from "./tools/apply-source-intake.js";
 import { createRollbackChangeTool } from "./tools/rollback-change.js";
 import { createScanChangesTool } from "./tools/scan-changes.js";
 import { createSearchNotesTool } from "./tools/search-notes.js";
@@ -40,6 +44,13 @@ const SAFE_ERROR_MESSAGES: Record<ToolFailureCode, string> = {
   BUILD_PREVIEW_EXPIRED: "ตัวอย่างการสร้าง Knowledge Graph หมดอายุแล้วครับ โปรดสร้างใหม่ครับ",
   ROLLBACK_NOT_FOUND: "ไม่พบรายการเปลี่ยนแปลงที่ย้อนคืนได้ครับ",
   ROLLBACK_CONFLICT: "มีข้อมูลใหม่หลังรายการเดิม จึงยังย้อนคืนอย่างปลอดภัยไม่ได้ครับ",
+  SOURCE_NOT_ACCESSIBLE: "ยังเข้าถึงไฟล์ต้นทางนี้อย่างปลอดภัยไม่ได้ครับ โปรดเลือกไฟล์จากโฟลเดอร์ที่ Cowork อนุญาตครับ",
+  SOURCE_UNSUPPORTED: "รูปแบบไฟล์ต้นทางนี้ยังไม่รองรับครับ โปรดใช้รูปแบบที่ระบุหรือส่งไฟล์แปลงแทนครับ",
+  SOURCE_LIMIT_EXCEEDED: "ไฟล์ต้นทางเกินขอบเขตปลอดภัยของงานนี้ครับ โปรดลดขนาดหรือแบ่งไฟล์ครับ",
+  SOURCE_PREVIEW_REQUIRED: "ยังไม่มีตัวอย่างการนำเข้าไฟล์ครับ โปรดสร้างตัวอย่างก่อนครับ",
+  SOURCE_PREVIEW_EXPIRED: "ตัวอย่างการนำเข้าไฟล์หมดอายุแล้วครับ โปรดสร้างใหม่ครับ",
+  SOURCE_CHANGED: "ไฟล์ต้นทางเปลี่ยนหลังสร้างตัวอย่างครับ โปรดตรวจและสร้างตัวอย่างใหม่ครับ",
+  SOURCE_COPY_CONFLICT: "มีไฟล์ชื่อหรือเนื้อหาขัดแย้งในปลายทางครับ โปรดตรวจตัวเลือกก่อนนำเข้าครับ",
   OBSIDIAN_CLI_ERROR: "ยังใช้ Obsidian CLI ไม่ได้ครับ โปรดเปิด Obsidian และเปิดใช้ CLI แล้วลองใหม่ครับ"
 };
 
@@ -78,7 +89,7 @@ export type RootAwareMcpServerOptions = ToolCatalogOptions & {
 };
 
 export function buildServerIdentity(): { name: string; version: string } {
-  return { name: "pir-acdm-obsidian-vault", version: "0.4.0" };
+  return { name: "pir-acdm-obsidian-vault", version: "0.5.0" };
 }
 
 function createToolCatalog(resolveServices: () => Promise<ToolServices>, options: ToolCatalogOptions = {}): UnboundToolDefinition[] {
@@ -89,6 +100,10 @@ function createToolCatalog(resolveServices: () => Promise<ToolServices>, options
     createSearchNotesTool(),
     createExploreGraphTool(),
     createReadNotesTool(),
+    createInspectSourcesTool(),
+    createReadSourceContentTool(),
+    createPreviewSourceIntakeTool(),
+    createApplySourceIntakeTool(),
     createPreviewKnowledgeBuildTool(),
     createApplyKnowledgeBuildTool(),
     createPreviewNoteWriteTool(),

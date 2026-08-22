@@ -3,7 +3,7 @@
   "manifest_version": "0.4",
   "name": "pir-acdm-obsidian-vault",
   "display_name": "PiR-ACDM — Obsidian Second Brain MCP",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "MCP สำหรับอ่านและเขียน Obsidian Vault อย่างปลอดภัย โดย PiR-ACDM",
   "long_description": "MCP แบบ local สำหรับอ่าน ค้นหา เปิด และเขียน Obsidian Markdown ภายใน Vault ที่ผู้เรียนเลือกเพียงหนึ่งแห่ง โดยต้อง preview และยืนยันก่อนบันทึกทุกครั้ง",
   "author": {
@@ -68,6 +68,22 @@
     {
       "name": "read_obsidian_notes",
       "description": "อ่านโน้ต Markdown ที่ระบุภายในขนาดปลอดภัย"
+    },
+    {
+      "name": "inspect_obsidian_sources",
+      "description": "ตรวจไฟล์ต้นทางหลายรูปแบบแบบอ่านอย่างเดียวก่อนนำเข้า Second Brain"
+    },
+    {
+      "name": "read_obsidian_source_content",
+      "description": "อ่านเนื้อหาและตำแหน่งอ้างอิงของไฟล์ต้นทางที่ตรวจแล้วแบบจำกัดขอบเขต"
+    },
+    {
+      "name": "preview_obsidian_source_intake",
+      "description": "สร้างตัวอย่างการนำไฟล์ต้นทางและความรู้เข้า Vault โดยยังไม่เขียนไฟล์"
+    },
+    {
+      "name": "apply_obsidian_source_intake",
+      "description": "นำเข้าไฟล์ต้นทางและความรู้ตามตัวอย่างล่าสุดหลังได้รับคำยืนยัน"
     },
     {
       "name": "preview_obsidian_knowledge_build",
