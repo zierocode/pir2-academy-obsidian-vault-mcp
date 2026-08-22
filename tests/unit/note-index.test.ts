@@ -42,7 +42,6 @@ async function loadApi(): Promise<NoteIndexApi | undefined> {
 afterEach(() => {
   for (const root of temporaryRoots.splice(0)) rmSync(root, { recursive: true, force: true });
 });
-
 describe("filesystem-direct note index", () => {
   it("resolves a basename Wikilink to a nested note and builds its backlink", async () => {
     const api = await loadApi();
@@ -74,4 +73,3 @@ describe("filesystem-direct note index", () => {
     ]);
   });
 });
-

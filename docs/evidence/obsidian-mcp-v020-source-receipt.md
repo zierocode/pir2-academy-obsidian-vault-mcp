@@ -1,6 +1,6 @@
 # Obsidian Vault MCP v0.2.0 source receipt
 
-Date: 2026-08-22  
+Date: 2026-08-22
 Branch: `codex/obsidian-mcp-v020`
 
 ## Verified source gates
@@ -8,7 +8,7 @@ Branch: `codex/obsidian-mcp-v020`
 - `npm run check`: pass
 - ESLint: pass
 - TypeScript: pass
-- Vitest: 17 files, 68 tests passed
+- Vitest: 17 files, 69 tests passed
 - `npm run smoke`: `smoke=pass tools=7`
 - `npm run scan:secrets`: pass
 - `npm run bundle`: pass
@@ -17,7 +17,7 @@ Branch: `codex/obsidian-mcp-v020`
 ## Artifact
 
 - File: `pir2-academy-obsidian-vault-0.2.0.mcpb`
-- SHA-256: `d6a93bb18f8bffda6133ca3d97b00050b64269b72788620d069e28a6dce82874`
+- SHA-256: `6ea24d9227b73b0733764b3e08a61158ece3c6e8ada55d06c67dbebffcb31e0f`
 - Archive entries: 8 (single-file compiled runtime; no `node_modules` paths)
 - Tool count: 7
 - Runtime: filesystem-direct; Obsidian may be closed
