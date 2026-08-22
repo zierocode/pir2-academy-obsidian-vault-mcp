@@ -178,7 +178,7 @@ describe("safe note write transaction", () => {
       atomicWrite: async () => Promise.reject(new Error("simulated atomic failure"))
     });
     await writer.previewWrite({ path: "meeting.md", content: "after\n", mode: "replace" });
-    await expect(writer.applyWrite("preview-1", "ยืนยันบันทึก")).rejects.toMatchObject({ code: "OBSIDIAN_CLI_ERROR" });
+    await expect(writer.applyWrite("preview-1", "ยืนยันบันทึก")).rejects.toMatchObject({ code: "VAULT_NOT_READY" });
     expect(readFileSync(note, "utf8")).toBe("before\n");
   });
 

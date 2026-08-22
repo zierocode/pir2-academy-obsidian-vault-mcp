@@ -64,11 +64,10 @@ export type ToolCatalogOptions = {
 };
 
 export function buildServerIdentity(): { name: string; version: string } {
-  return { name: "pir2-academy-obsidian-vault", version: "0.2.0" };
+  return { name: "pir2-academy-obsidian-vault", version: "0.2.6" };
 }
 
 export function createToolCatalog(services: ToolServices, options: ToolCatalogOptions = {}): UnboundToolDefinition[] {
-  const diagnostic = options.diagnostic ?? writeDiagnostic;
   const definitions = [
     createVaultStatusTool(),
     createSearchNotesTool(),
@@ -79,13 +78,27 @@ export function createToolCatalog(services: ToolServices, options: ToolCatalogOp
     createRenderSecondBrainWorkspaceTool()
   ];
 
+  return bindToolCatalog(definitions, services, options);
+}
+
+export function createUiOnlyToolCatalog(options: ToolCatalogOptions = {}): UnboundToolDefinition[] {
+  return bindToolCatalog([createRenderSecondBrainWorkspaceTool()], undefined, options);
+}
+
+function bindToolCatalog(
+  definitions: UnboundToolDefinition[],
+  services: ToolServices | undefined,
+  options: ToolCatalogOptions
+): UnboundToolDefinition[] {
+  const diagnostic = options.diagnostic ?? writeDiagnostic;
+
   return definitions.map((definition) => ({
     ...definition,
     handler: async (input, _context) => {
       const startedAt = Date.now();
       let result: ToolCallResult;
       const context: ToolExecutionContext = {
-        services,
+        services: services as ToolServices,
         success: successResult,
         failure: failureResult
       };
@@ -106,7 +119,14 @@ export function createToolCatalog(services: ToolServices, options: ToolCatalogOp
 }
 
 export function createMcpServer(services: ToolServices, options: ToolCatalogOptions = {}): Server {
-  const catalog = createToolCatalog(services, options);
+  return createServer(createToolCatalog(services, options));
+}
+
+export function createUiOnlyMcpServer(options: ToolCatalogOptions = {}): Server {
+  return createServer(createUiOnlyToolCatalog(options));
+}
+
+function createServer(catalog: UnboundToolDefinition[]): Server {
   const server = new Server(buildServerIdentity(), { capabilities: { tools: {}, resources: {} } });
 
   server.setRequestHandler(ListToolsRequestSchema, () => ({
@@ -155,7 +175,8 @@ export async function createProductionToolServices(environment: NodeJS.ProcessEn
 }
 
 export async function createProductionMcpServer(environment: NodeJS.ProcessEnv = process.env): Promise<Server> {
-  return createMcpServer(await createProductionToolServices(environment));
+  void environment;
+  return createUiOnlyMcpServer();
 }
 
 export async function runStdioServer(environment: NodeJS.ProcessEnv = process.env): Promise<void> {

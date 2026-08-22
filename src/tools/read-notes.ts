@@ -14,11 +14,7 @@ export function createReadNotesTool(): UnboundToolDefinition {
     inputSchema,
     handler: async (input, context) => {
       const values = input as z.infer<typeof inputSchema>;
-      const result = await readNotes(
-        context.services.vault,
-        values.paths,
-        async (path) => (await context.services.runCli(["read", `path=${path}`])).stdout
-      );
+      const result = await readNotes(context.services.vault, values.paths);
       return context.success("อ่านโน้ตจาก Obsidian Vault สำเร็จครับ", {
         ...result,
         count: result.notes.length,

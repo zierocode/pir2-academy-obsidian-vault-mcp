@@ -1,6 +1,6 @@
 {
   "name": "pir2-academy-obsidian-vault",
-  "version": "0.2.0",
+  "version": "0.2.6",
   "description": "MCP แบบ local สำหรับอ่านและเขียน Obsidian Markdown อย่างปลอดภัย โดย PiR2 Academy",
   "license": "MIT",
   "type": "module",

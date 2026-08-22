@@ -1,4 +1,11 @@
 import { App } from "@modelcontextprotocol/ext-apps";
+import {
+  SECOND_BRAIN_APP_CAPABILITIES,
+  requestWorkspaceDisplayMode,
+  type SecondBrainDisplayMode
+} from "./display-mode.js";
+import { getWorkspaceState } from "./workspace-state.js";
+import { confirmationAction, learnerDescription } from "./workspace-actions.js";
 
 type Option = { id: string; label: string; description?: string; selected?: boolean; message: string };
 type Action = { id: string; label: string; message: string };
@@ -24,7 +31,38 @@ type View = {
 const root = document.querySelector<HTMLElement>("#app");
 if (!root) throw new Error("missing app root");
 
-const app = new App({ name: "Second Brain Workspace", version: "0.2.0" }, {}, { strict: true });
+const app = new App(
+  { name: "พื้นที่ทำงาน Second Brain", version: "0.2.6" },
+  SECOND_BRAIN_APP_CAPABILITIES,
+  { strict: true, autoResize: true }
+);
+
+let displayMode: SecondBrainDisplayMode = "inline";
+
+function applyDisplayMode(mode: SecondBrainDisplayMode): void {
+  displayMode = mode;
+  document.documentElement.dataset.displayMode = mode;
+  const button = root.querySelector<HTMLButtonElement>("[data-mode-toggle]");
+  if (button) button.textContent = mode === "fullscreen" ? "ย่อกลับเข้าแชต" : "เปิดเต็มหน้าจอ";
+}
+
+async function openFullscreen(): Promise<void> {
+  const mode = await requestWorkspaceDisplayMode(
+    { ...app.getHostContext(), displayMode },
+    (params) => app.requestDisplayMode(params)
+  );
+  applyDisplayMode(mode);
+}
+
+async function toggleDisplayMode(): Promise<void> {
+  const requestedMode = displayMode === "fullscreen" ? "inline" : "fullscreen";
+  try {
+    const result = await app.requestDisplayMode({ mode: requestedMode });
+    applyDisplayMode(result.mode);
+  } catch {
+    showStatus("Claude ยังไม่รองรับการเปลี่ยนมุมมองในหน้าต่างนี้ครับ", true);
+  }
+}
 
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -54,7 +92,7 @@ function choiceButton(option: Option | Action, primary = false): HTMLButtonEleme
   button.type = "button";
   button.append(document.createTextNode(option.label));
   if ("description" in option && option.description) {
-    button.append(element("span", "option-description", option.description));
+    button.append(element("span", "option-description", learnerDescription(option.description)));
   }
   if ("selected" in option && option.selected) button.classList.add("selected");
   button.addEventListener("click", () => void sendChoice(option.message, button));
@@ -95,35 +133,47 @@ function renderSources(parent: HTMLElement, sources: Source[]): void {
   parent.append(details);
 }
 
-async function confirmWrite(view: View, button: HTMLButtonElement): Promise<void> {
-  if (!view.previewId) return;
-  button.disabled = true;
-  showStatus("กำลังบันทึกหลังยืนยัน…");
-  try {
-    const result = await app.callServerTool({
-      name: "apply_obsidian_note_write",
-      arguments: { preview_id: view.previewId, confirmation: "ยืนยันบันทึก" }
-    });
-    if (result.isError) {
-      button.disabled = false;
-      showStatus("บันทึกไม่สำเร็จครับ โปรดสร้าง Preview ใหม่ในแชตครับ", true);
-      return;
-    }
-    showStatus("บันทึกเข้า Second Brain แล้วครับ");
-  } catch {
-    button.disabled = false;
-    showStatus("เชื่อมต่อเครื่องมือไม่สำเร็จครับ Preview เดิมยังไม่ถูกบันทึก", true);
-  }
-}
-
 function render(view: View): void {
   root.replaceChildren();
-  const header = element("header", "panel");
-  header.append(element("div", "eyebrow", "Second Brain Workspace"), element("h1", undefined, view.title));
-  if (view.subtitle) header.append(element("p", undefined, view.subtitle));
-  root.append(header);
+  root.dataset.viewKind = view.kind;
+  const workspace = getWorkspaceState(view.kind);
 
-  const body = element("section", "panel");
+  const topbar = element("header", "topbar");
+  const brand = element("div", "brand");
+  brand.append(element("span", "brand-mark", "◆"), element("span", undefined, "Obsidian Second Brain"));
+  const topbarActions = element("div", "topbar-actions");
+  topbarActions.append(element("span", "ready-chip", "● พร้อมใช้งาน"));
+  const modeToggle = element(
+    "button",
+    "mode-toggle",
+    displayMode === "fullscreen" ? "ย่อกลับเข้าแชต" : "เปิดเต็มหน้าจอ"
+  );
+  modeToggle.type = "button";
+  modeToggle.dataset.modeToggle = "true";
+  modeToggle.addEventListener("click", () => void toggleDisplayMode());
+  topbarActions.append(modeToggle);
+  topbar.append(brand, topbarActions);
+  root.append(topbar);
+
+  const shell = element("div", "workspace-shell");
+  const navigation = element("nav", "workflow-nav");
+  navigation.append(element("span", "nav-label", "ขั้นตอนการทำงาน"));
+  const steps = element("ol", "steps");
+  workspace.steps.forEach((label, index) => {
+    const item = element("li", index === workspace.currentIndex ? "active" : index < workspace.currentIndex ? "done" : "");
+    item.append(element("span", "step-number", index < workspace.currentIndex ? "✓" : String(index + 1)), element("span", undefined, label));
+    steps.append(item);
+  });
+  navigation.append(steps);
+
+  const content = element("main", "workspace-content");
+  const header = element("header", "content-header");
+  header.append(element("span", "section-kicker", `ขั้นตอน ${workspace.currentIndex + 1} จาก ${workspace.steps.length}`));
+  header.append(element("h1", undefined, view.title));
+  if (view.subtitle) header.append(element("p", undefined, view.subtitle));
+  content.append(header);
+
+  const body = element("section", "content-body");
   if (view.reasoning?.length) appendList(body, view.reasoning);
   if (view.summary) body.append(element("p", undefined, view.summary));
   renderMetrics(body, view.metrics);
@@ -150,20 +200,31 @@ function render(view: View): void {
   }
   if (view.sources) renderSources(body, view.sources);
   if (view.changes?.length) appendList(body, view.changes);
-  root.append(body);
+  content.append(body);
 
-  const actions = element("section", "panel actions");
+  const actions = element("section", "actions");
   if (view.kind === "confirmation") {
-    const confirm = element("button", "primary", "ยืนยันบันทึก");
-    confirm.type = "button";
-    confirm.addEventListener("click", () => void confirmWrite(view, confirm));
-    actions.append(confirm);
+    actions.append(choiceButton(confirmationAction(), true));
     actions.append(choiceButton({ id: "revise", label: "กลับไปแก้", message: "ขอกลับไปแก้ Preview นี้" }));
   } else {
     for (const action of view.actions ?? []) actions.append(choiceButton(action, actions.childElementCount === 0));
   }
   actions.append(element("div", "status", ""));
-  if (actions.childElementCount > 1) root.append(actions);
+  if (actions.childElementCount > 1) content.append(actions);
+
+  const context = element("aside", "context-panel");
+  context.append(element("span", "nav-label", "สถานะปัจจุบัน"));
+  const contextCard = element("div", "context-card");
+  contextCard.append(element("strong", undefined, workspace.currentLabel));
+  contextCard.append(element("span", undefined, view.kind === "project_picker" ? `พบ ${view.options?.length ?? 0} ตัวเลือก` : "กำลังทำงานจากข้อมูลใน Vault"));
+  context.append(contextCard);
+  const safety = element("div", "safety-note");
+  safety.append(element("span", "safety-icon", "✓"), element("span", undefined, view.kind === "confirmation" ? "รอการยืนยันก่อนบันทึก" : "ยังไม่มีการเขียนไฟล์"));
+  context.append(safety);
+
+  shell.append(navigation, content, context);
+  root.append(shell);
+  applyDisplayMode(displayMode);
 }
 
 app.ontoolresult = (params) => {
@@ -172,3 +233,8 @@ app.ontoolresult = (params) => {
 };
 
 await app.connect();
+applyDisplayMode(app.getHostContext()?.displayMode ?? "inline");
+app.onhostcontextchanged = (context) => {
+  if (context.displayMode) applyDisplayMode(context.displayMode);
+};
+void openFullscreen();

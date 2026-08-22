@@ -20,8 +20,15 @@ const relativeNotePath = safeText.refine(
   "notePath must be a relative Markdown path"
 );
 
+const safeIdentifier = z
+  .string()
+  .trim()
+  .min(1)
+  .max(80)
+  .refine((value) => !/[<>]/u.test(value), "markup is not allowed");
+
 const optionSchema = z.object({
-  id: z.string().trim().min(1).max(80).regex(/^[A-Za-z0-9_-]+$/u),
+  id: safeIdentifier,
   label: safeText,
   description: safeText.optional(),
   selected: z.boolean().optional(),
@@ -35,7 +42,7 @@ const sourceSchema = z.object({
 });
 
 const actionSchema = z.object({
-  id: z.string().trim().min(1).max(80).regex(/^[A-Za-z0-9_-]+$/u),
+  id: safeIdentifier,
   label: safeText,
   message: safeText
 });
@@ -96,7 +103,7 @@ export function exampleSecondBrainView(kind: "intake_review"): z.infer<typeof in
 export function exampleSecondBrainView(kind: "result_explorer"): z.infer<typeof resultExplorer>;
 export function exampleSecondBrainView(kind: "confirmation"): z.infer<typeof confirmation>;
 export function exampleSecondBrainView(kind: SecondBrainView["kind"]): SecondBrainView {
-  const common = { title: "Second Brain Workspace" };
+  const common = { title: "พื้นที่ทำงาน Second Brain" };
   switch (kind) {
     case "project_picker":
       return {
@@ -115,25 +122,25 @@ export function exampleSecondBrainView(kind: SecondBrainView["kind"]): SecondBra
       return {
         ...common,
         kind,
-        metrics: [{ label: "Facts", value: "8" }],
-        proposedNotes: ["03 Knowledge/Customers/Customer Survey.md"],
-        actions: [{ id: "preview", label: "สร้าง Preview", message: "สร้าง Preview" }]
+        metrics: [{ label: "ข้อเท็จจริง", value: "8" }],
+        proposedNotes: ["03 คลังความรู้/ลูกค้า/ผลสำรวจลูกค้า.md"],
+        actions: [{ id: "preview", label: "ดูตัวอย่างก่อนบันทึก", message: "แสดงตัวอย่างก่อนบันทึก" }]
       };
     case "result_explorer":
       return {
         ...common,
         kind,
         summary: "พบคำตอบพร้อมหลักฐานจาก Vault",
-        sources: [{ label: "Customer Survey", locator: "Sheet: Summary", notePath: "03 Knowledge/Customers/Customer Survey.md" }],
-        actions: [{ id: "agenda", label: "เตรียม Meeting Agenda", message: "เตรียม Meeting Agenda จากผลลัพธ์นี้" }]
+        sources: [{ label: "ผลสำรวจลูกค้า", locator: "ชีต: สรุปผล", notePath: "03 คลังความรู้/ลูกค้า/ผลสำรวจลูกค้า.md" }],
+        actions: [{ id: "agenda", label: "เตรียมวาระประชุม", message: "เตรียมวาระประชุมจากผลลัพธ์นี้" }]
       };
     case "confirmation":
       return {
         ...common,
         kind,
         previewId: "preview-1",
-        target: "03 Knowledge/Customers/Customer Survey.md",
-        changes: ["สร้าง Knowledge Note ใหม่หนึ่งรายการ"]
+        target: "03 คลังความรู้/ลูกค้า/ผลสำรวจลูกค้า.md",
+        changes: ["สร้างโน้ตความรู้ใหม่หนึ่งรายการ"]
       };
   }
 }

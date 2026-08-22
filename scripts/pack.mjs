@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { deflateRawSync } from "node:zlib";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const BUNDLE_NAME = "pir2-academy-obsidian-vault-0.2.0.mcpb";
+const BUNDLE_NAME = "pir2-academy-obsidian-vault-0.2.6.mcpb";
 const OUTPUT_PATH = resolve(ROOT, "dist", BUNDLE_NAME);
 const TSC_PATH = resolve(ROOT, "node_modules/typescript/bin/tsc");
 const MCPB_CLI_PATH = resolve(ROOT, "node_modules/@anthropic-ai/mcpb/dist/cli/cli.js");
@@ -54,10 +54,15 @@ function validateManifest() {
 function validateIdentity() {
   const packageJson = readJson(resolve(ROOT, "package.json"));
   const manifest = readJson(resolve(ROOT, "manifest.json"));
-  assert(packageJson.name === "pir2-academy-obsidian-vault" && packageJson.version === "0.2.0", "package identity drift");
+  assert(packageJson.name === "pir2-academy-obsidian-vault" && packageJson.version === "0.2.6", "package identity drift");
   assert(manifest.name === packageJson.name && manifest.version === packageJson.version, "manifest identity drift");
   assert(manifest.server?.entry_point === "server/index.js", "unexpected server entry point");
-  assert(Array.isArray(manifest.tools) && manifest.tools.length === 7, "unexpected tool catalog");
+  assert(
+    Array.isArray(manifest.tools) &&
+      manifest.tools.length === 1 &&
+      manifest.tools[0]?.name === "render_second_brain_workspace",
+    "unexpected tool catalog"
+  );
   assert(typeof manifest.icon === "string" && existsSync(resolve(ROOT, manifest.icon)), "bundle icon is unavailable");
   return { packageJson, manifest };
 }

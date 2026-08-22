@@ -20,14 +20,14 @@ describe("MCPB manifest contract", () => {
 
     expect(packageJson).toMatchObject({
       name: "pir2-academy-obsidian-vault",
-      version: "0.2.0",
+      version: "0.2.6",
       engines: { node: ">=20" }
     });
     expect(manifest).toMatchObject({
       manifest_version: "0.4",
       name: "pir2-academy-obsidian-vault",
       display_name: "PiR2 Academy — Obsidian Vault",
-      version: "0.2.0"
+      version: "0.2.6"
     });
   });
 
@@ -41,18 +41,14 @@ describe("MCPB manifest contract", () => {
     });
   });
 
-  it("requires one approved vault directory with Thai-first help", () => {
+  it("uses the Cowork working folder and has no duplicate vault setting", () => {
     expect(existsSync(MANIFEST_PATH)).toBe(true);
 
     const manifest = readJson(MANIFEST_PATH);
-    expect(manifest.user_config).toEqual({
-      approved_vault_root: {
-        type: "directory",
-        title: "โฟลเดอร์ Obsidian Vault ที่อนุญาต",
-        description: "เลือก Obsidian Vault เพียงหนึ่งโฟลเดอร์ที่ MCP นี้อ่านและเขียนได้",
-        required: true,
-        multiple: false
-      }
-    });
+    expect(manifest.user_config).toBeUndefined();
+    expect((manifest.server as { mcp_config?: { env?: unknown } }).mcp_config?.env).toBeUndefined();
+    expect((manifest.tools as Array<{ name: string }>).map((tool) => tool.name)).toEqual([
+      "render_second_brain_workspace"
+    ]);
   });
 });

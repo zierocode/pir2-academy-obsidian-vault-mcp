@@ -7,14 +7,8 @@ import { McpbManifestSchema } from "@anthropic-ai/mcpb/schemas/0.4";
 import { SECRET_PATTERNS } from "./secret-scan-policy.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.2.0.mcpb");
+const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.2.6.mcpb");
 const EXPECTED_TOOLS = [
-  "obsidian_vault_status",
-  "search_obsidian_notes",
-  "read_obsidian_notes",
-  "preview_obsidian_note_write",
-  "apply_obsidian_note_write",
-  "open_obsidian_note",
   "render_second_brain_workspace"
 ];
 
@@ -87,11 +81,13 @@ function validateManifest(entries) {
   const manifest = JSON.parse(manifestEntry.data.toString("utf8"));
   const packageJson = JSON.parse(packageEntry.data.toString("utf8"));
   assert(McpbManifestSchema.safeParse(manifest).success, "MCPB manifest schema validation failed");
-  assert(manifest.name === "pir2-academy-obsidian-vault" && manifest.version === "0.2.0", "manifest identity drift");
+  assert(manifest.name === "pir2-academy-obsidian-vault" && manifest.version === "0.2.6", "manifest identity drift");
   assert(packageJson.name === manifest.name && packageJson.version === manifest.version, "package identity drift");
   assert(manifest.server?.entry_point === "server/index.js", "unexpected server entry point");
   assert(entries.some((entry) => entry.path === manifest.icon), "manifest icon target is missing");
   assert(JSON.stringify(manifest.tools?.map((tool) => tool.name)) === JSON.stringify(EXPECTED_TOOLS), "tool catalog drift");
+  assert(manifest.user_config === undefined, "duplicate vault configuration is present");
+  assert(manifest.server?.mcp_config?.env === undefined, "duplicate vault environment is present");
   assert(JSON.stringify(manifest.compatibility) === JSON.stringify({ platforms: ["darwin", "win32"], runtimes: { node: ">=20" } }), "compatibility drift");
   const serialized = JSON.stringify(manifest).toLowerCase();
   assert(!/credential|keyring|oauth|token|secret|password/u.test(serialized), "credential configuration is present");

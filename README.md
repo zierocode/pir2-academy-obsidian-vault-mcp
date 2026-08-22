@@ -1,20 +1,20 @@
-# PiR2 Academy Obsidian Vault MCP
+# PiR2 Academy Obsidian Second Brain UI
 
-MCP แบบ local สำหรับอ่าน ค้นหา เปิด และเขียน Obsidian Markdown ภายใน Vault ที่ผู้เรียนเลือกเพียงหนึ่งแห่งอย่างปลอดภัย
+MCP App แบบ local สำหรับแสดง UI ภาษาไทยของ Second Brain ใน Claude Cowork
 
 ## ขอบเขต
 
-Bundle นี้มี six safe vault tools: status, search, read, preview write, confirmed apply write, และ open พร้อม `render_second_brain_workspace` สำหรับ UI แบบโต้ตอบใน Claude การตีความ meeting, decision/action extraction, และ weekly brief อยู่ใน Skill ของคอร์ส ไม่ใช่ MCP นี้
+Bundle สำหรับผู้เรียนมีเครื่องมือเดียวคือ `render_second_brain_workspace` สำหรับ UI แบบโต้ตอบใน Claude การอ่าน ค้น และเขียนไฟล์ใช้เครื่องมือของ Cowork ภายใน working folder ที่ผู้เรียนกดอนุญาตตอนเริ่มงาน
 
-ทุก read/write ถูกจำกัดอยู่ใน approved vault root เดียว และปฏิเสธ `.obsidian`, `.pir2-academy-backups`, traversal, absolute path, symlink, และไฟล์ที่ไม่ใช่ Markdown. การเขียนต้อง preview ก่อน แล้วใช้ `ยืนยันบันทึก` หรือ `Confirm write` ที่ยังใหม่เท่านั้น
+ผู้เรียนไม่ต้องเลือก Vault ซ้ำใน Extension การตีความการประชุม การสกัดมติและงานที่ต้องทำ การดูตัวอย่างก่อนบันทึก และสรุปรายสัปดาห์อยู่ใน Skill ของคอร์ส
 
-v1 ไม่มี delete, rename, move, bulk write, plugin install, shell command, remote sync, cloud vault, หรือ credential flow
+v1 ไม่มี credential, remote sync หรือ cloud vault และ UI ไม่เข้าถึงไฟล์โดยตรง
 
 ## Requirements
 
 - Node.js 20+
-- Obsidian installer 1.12.7+ with Command line interface enabled
-- Obsidian app available on the learner machine
+- macOS หรือ Windows พร้อม Claude Cowork และ Starter Vault ในเครื่อง
+- Obsidian เป็นหน้าดู Vault แบบ optional ไม่ต้องเปิด Obsidian CLI
 
 ## Maintainer commands
 
@@ -33,7 +33,7 @@ make doctor
 ```
 
 `npm run bundle` writes the local deterministic release candidate to
-`dist/pir2-academy-obsidian-vault-0.2.0.mcpb` and prints its SHA-256 checksum.
+`dist/pir2-academy-obsidian-vault-0.2.6.mcpb` and prints its SHA-256 checksum.
 `npm run bundle:verify` validates its MCPB v0.4 metadata, runtime dependency
 closure, executable entry point, and exclusions. These commands do not publish,
 install, or upload the bundle.
@@ -47,4 +47,6 @@ The package icon is the unchanged PiR2 Academy course-owned icon reused from
 `course-assets/create-mcp/sheets-reader-workshop/assets/icons/icon.png`
 (SHA-256 `d79748c26865b1b3d2b45810874648b73e7eecc4c887bbff30baffdaf5cf54c7`).
 
+The repository retains the previously hardened vault-tool modules as tested library code,
+but the learner production server intentionally exposes only the interactive UI tool.
 The current verified state is recorded in `docs/LIVE.md`; test evidence is in `docs/TESTING.md`.

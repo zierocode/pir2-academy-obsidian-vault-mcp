@@ -5,7 +5,7 @@ import { inflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 
 const ROOT = resolve(import.meta.dirname, "../..");
-const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.2.0.mcpb");
+const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.2.6.mcpb");
 
 function bundleManifest(): Record<string, unknown> {
   if (!process.env.npm_execpath) throw new Error("npm_execpath is required for repository script tests");
@@ -45,17 +45,16 @@ function findEndOfCentralDirectory(archive: Buffer): number {
   throw new Error("missing zip central directory");
 }
 
-describe("keyring-free package configuration", () => {
-  it("ships one local vault-directory setting and no credential or keyring configuration", () => {
+describe("configuration-free Cowork companion", () => {
+  it("ships no duplicate vault setting, credential or keyring configuration", () => {
     const manifest = bundleManifest();
     const serialized = JSON.stringify(manifest).toLowerCase();
 
     expect(serialized).not.toMatch(/credential|keyring|oauth|token|secret|password/);
-    expect(manifest.user_config).toEqual({
-      approved_vault_root: expect.objectContaining({ type: "directory", required: true, multiple: false })
-    });
-    expect((manifest.server as { mcp_config?: { env?: Record<string, string> } }).mcp_config?.env).toEqual({
-      APPROVED_VAULT_ROOT: "${user_config.approved_vault_root}"
-    });
+    expect(manifest.user_config).toBeUndefined();
+    expect((manifest.server as { mcp_config?: { env?: Record<string, string> } }).mcp_config?.env).toBeUndefined();
+    expect((manifest.tools as Array<{ name: string }>).map((tool) => tool.name)).toEqual([
+      "render_second_brain_workspace"
+    ]);
   }, 30_000);
 });

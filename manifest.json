@@ -3,9 +3,9 @@
   "manifest_version": "0.4",
   "name": "pir2-academy-obsidian-vault",
   "display_name": "PiR2 Academy — Obsidian Vault",
-  "version": "0.2.0",
-  "description": "MCP สำหรับอ่านและเขียน Obsidian Markdown อย่างปลอดภัย โดย PiR2 Academy",
-  "long_description": "MCP แบบ local สำหรับอ่าน ค้นหา เปิด และเขียน Obsidian Markdown ภายใน Vault ที่ผู้เรียนเลือกเพียงหนึ่งแห่ง โดยต้อง preview และยืนยันก่อนบันทึกทุกครั้ง",
+  "version": "0.2.6",
+  "description": "UI ภาษาไทยสำหรับเลือก ตรวจ และยืนยันงาน Second Brain ใน Claude Cowork โดย PiR2 Academy",
+  "long_description": "ส่วนเสริมแบบ local สำหรับแสดง UI ของ Second Brain ใน Claude Cowork ผู้เรียนอนุญาต Starter Vault เพียงครั้งเดียวตอนเริ่ม Cowork และไม่ต้องตั้งค่าโฟลเดอร์ซ้ำใน Extension",
   "author": {
     "name": "PiR2 Academy"
   },
@@ -33,46 +33,10 @@
       "command": "node",
       "args": [
         "${__dirname}/server/index.js"
-      ],
-      "env": {
-        "APPROVED_VAULT_ROOT": "${user_config.approved_vault_root}"
-      }
-    }
-  },
-  "user_config": {
-    "approved_vault_root": {
-      "type": "directory",
-      "title": "โฟลเดอร์ Obsidian Vault ที่อนุญาต",
-      "description": "เลือก Obsidian Vault เพียงหนึ่งโฟลเดอร์ที่ MCP นี้อ่านและเขียนได้",
-      "required": true,
-      "multiple": false
+      ]
     }
   },
   "tools": [
-    {
-      "name": "obsidian_vault_status",
-      "description": "ตรวจว่า Obsidian Vault ที่อนุญาตพร้อมใช้งานหรือยัง"
-    },
-    {
-      "name": "search_obsidian_notes",
-      "description": "ค้นหาโน้ต Markdown ภายใน Obsidian Vault ที่อนุญาต"
-    },
-    {
-      "name": "read_obsidian_notes",
-      "description": "อ่านโน้ต Markdown ที่ระบุภายในขนาดปลอดภัย"
-    },
-    {
-      "name": "preview_obsidian_note_write",
-      "description": "สร้างตัวอย่างการเขียนโน้ตโดยยังไม่แก้ไฟล์จริง"
-    },
-    {
-      "name": "apply_obsidian_note_write",
-      "description": "บันทึกตัวอย่างล่าสุดหลังยืนยันด้วยข้อความที่กำหนด"
-    },
-    {
-      "name": "open_obsidian_note",
-      "description": "เปิดโน้ตที่ระบุในแอป Obsidian โดยไม่แก้เนื้อหา"
-    },
     {
       "name": "render_second_brain_workspace",
       "description": "แสดงตัวเลือก รีวิว ผลลัพธ์ และการยืนยันของ Second Brain แบบโต้ตอบ"

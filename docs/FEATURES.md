@@ -3,13 +3,14 @@
 ## Implemented
 
 - MCPB v0.4 manifest for macOS and Windows Node 20+
-- One `approved_vault_root` directory configuration
-- Six stable local MCP tool names and stable result envelope
+- Configuration-free Cowork companion: no duplicate Vault directory setting
+- One learner production tool: `render_second_brain_workspace`
+- Previously hardened local Vault modules retained as tested library code, not exposed to learners
 - Local deterministic secret scan policy and runner
 
 ## Deferred
 
-- Vault boundary, safe writes, Obsidian CLI adapter, stdio server, MCPB archive, CI release certification, and Desktop installation
+- Public release and clean-machine Windows/macOS installation certification
 
 ## Verification
 

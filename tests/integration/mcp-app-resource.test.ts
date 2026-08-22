@@ -44,13 +44,13 @@ describe("Second Brain MCP App resource", () => {
 
       const listedResources = await client.listResources();
       expect(listedResources.resources).toEqual([
-        expect.objectContaining({ uri: RESOURCE_URI, name: "Second Brain Workspace" })
+        expect.objectContaining({ uri: RESOURCE_URI, name: "พื้นที่ทำงาน Second Brain" })
       ]);
 
       const resource = await client.readResource({ uri: RESOURCE_URI });
       expect(resource.contents[0]).toMatchObject({ uri: RESOURCE_URI });
       expect(resource.contents[0].mimeType).toContain("text/html");
-      expect("text" in resource.contents[0] ? resource.contents[0].text : "").toContain("Second Brain Workspace");
+      expect("text" in resource.contents[0] ? resource.contents[0].text : "").toContain("พื้นที่ทำงาน Second Brain");
 
       const rendered = await client.callTool({
         name: "render_second_brain_workspace",
@@ -59,13 +59,36 @@ describe("Second Brain MCP App resource", () => {
             kind: "project_picker",
             title: "ข้อมูลนี้เกี่ยวข้องกับโปรเจกต์ไหน?",
             options: [
-              { id: "new-branch", label: "Common Ground — New Branch", message: "เลือก Common Ground — New Branch" },
+              { id: "new-branch", label: "คอมมอนกราวด์ — โครงการสาขาใหม่", message: "เลือกคอมมอนกราวด์ — โครงการสาขาใหม่" },
               { id: "new-project", label: "สร้างโปรเจกต์ใหม่", message: "สร้างโปรเจกต์ใหม่" }
             ]
           }
         }
       });
       expect(rendered.structuredContent).toMatchObject({
+        ok: true,
+        data: { view: { kind: "project_picker" } }
+      });
+
+      const renderedFromHostAlias = await client.callTool({
+        name: "render_second_brain_workspace",
+        arguments: {
+          view: {
+            type: "project_picker",
+            title: "เลือกโปรเจกต์ก่อนเริ่ม",
+            status: { vault: "พร้อมใช้งาน" },
+            options: [
+              {
+                id: "new-branch",
+                label: "คอมมอนกราวด์ — โครงการสาขาใหม่",
+                description: "พบแหล่งข้อมูลที่เกี่ยวข้อง",
+                message: "เลือกคอมมอนกราวด์ — โครงการสาขาใหม่"
+              }
+            ]
+          }
+        }
+      });
+      expect(renderedFromHostAlias.structuredContent).toMatchObject({
         ok: true,
         data: { view: { kind: "project_picker" } }
       });

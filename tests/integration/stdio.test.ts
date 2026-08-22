@@ -1,6 +1,5 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -9,14 +8,6 @@ import { afterEach, describe, expect, it } from "vitest";
 const ROOT = resolve(import.meta.dirname, "../..");
 const TSC_PATH = resolve(ROOT, "node_modules/typescript/bin/tsc");
 const temporaryRoots: string[] = [];
-
-function createVault(): string {
-  const root = mkdtempSync(resolve(tmpdir(), "pir2-obsidian-stdio-"));
-  temporaryRoots.push(root);
-  const vault = resolve(root, "vault");
-  mkdirSync(vault);
-  return realpathSync(vault);
-}
 
 function compileServer(): string {
   const outputRoot = mkdtempSync(resolve(ROOT, ".test-server-"));
@@ -30,15 +21,14 @@ afterEach(() => {
 });
 
 describe("compiled Obsidian MCP stdio server", () => {
-  it("initializes, lists tools, and applies only an explicitly confirmed preview without calling Obsidian", async () => {
+  it("initializes without folder configuration and exposes only the Thai-first interactive UI", async () => {
     const serverPath = compileServer();
     expect(existsSync(serverPath)).toBe(true);
-    const vault = createVault();
     const transport = new StdioClientTransport({
       command: process.execPath,
       args: [serverPath],
       cwd: ROOT,
-      env: { ...process.env, APPROVED_VAULT_ROOT: vault },
+      env: process.env,
       stderr: "pipe"
     });
     const client = new Client({ name: "vitest", version: "1.0.0" });
@@ -46,30 +36,20 @@ describe("compiled Obsidian MCP stdio server", () => {
     try {
       await client.connect(transport);
       const listed = await client.listTools();
-      expect(listed.tools).toHaveLength(7);
+      expect(listed.tools.map((tool) => tool.name)).toEqual(["render_second_brain_workspace"]);
 
-      const premature = await client.callTool({
-        name: "apply_obsidian_note_write",
-        arguments: { preview_id: "missing", confirmation: "ยืนยันบันทึก" }
+      const rendered = await client.callTool({
+        name: "render_second_brain_workspace",
+        arguments: {
+          view: {
+            kind: "project_picker",
+            title: "เลือกโปรเจกต์ก่อนเริ่ม",
+            options: [{ id: "thai-project", label: "คอมมอนกราวด์ — โครงการสาขาใหม่", message: "เลือกโครงการสาขาใหม่" }]
+          }
+        }
       });
-      expect(premature).toMatchObject({ isError: true, structuredContent: { code: "WRITE_PREVIEW_REQUIRED" } });
-
-      const preview = await client.callTool({
-        name: "preview_obsidian_note_write",
-        arguments: { path: "lesson.md", content: "safe content\n", mode: "create" }
-      });
-      const previewData = preview.structuredContent as { ok: boolean; data?: { preview_id?: string } };
-      expect(previewData).toMatchObject({ ok: true, data: { preview_id: expect.any(String) } });
-      expect(existsSync(resolve(vault, "lesson.md"))).toBe(false);
-
-      const applied = await client.callTool({
-        name: "apply_obsidian_note_write",
-        arguments: { preview_id: previewData.data!.preview_id, confirmation: "ยืนยันบันทึก" }
-      });
-      expect(applied.isError).toBeUndefined();
-      expect(applied.structuredContent).toMatchObject({ ok: true, code: "OK" });
-      expect(readFileSync(resolve(vault, "lesson.md"), "utf8")).toBe("safe content\n");
-      expect(JSON.stringify([preview, applied])).not.toContain(vault);
+      expect(rendered.isError).toBeUndefined();
+      expect(rendered.structuredContent).toMatchObject({ ok: true, data: { view: { kind: "project_picker" } } });
     } finally {
       await client.close();
     }

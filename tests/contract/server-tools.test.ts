@@ -18,6 +18,7 @@ type ServerApi = {
     writer: NoteWriter;
     runCli(args: readonly string[]): Promise<{ stdout: string; stderr: string; exitCode: number }>;
   }): { connect(transport: InMemoryTransport): Promise<void>; close(): Promise<void> };
+  createProductionMcpServer(): Promise<{ connect(transport: InMemoryTransport): Promise<void>; close(): Promise<void> }>;
 };
 
 const temporaryRoots: string[] = [];
@@ -49,6 +50,23 @@ afterEach(() => {
 });
 
 describe("Obsidian Vault MCP tools", () => {
+  it("exposes only the interactive workspace in the learner production server", async () => {
+    const api = await loadApi();
+    expect(api).toBeDefined();
+    const server = await api!.createProductionMcpServer();
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: "vitest", version: "1.0.0" });
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const listed = await client.listTools();
+      expect(listed.tools.map((tool) => tool.name)).toEqual(["render_second_brain_workspace"]);
+    } finally {
+      await client.close();
+      await server.close();
+    }
+  });
+
   it("initializes through the real MCP SDK and exposes six vault tools plus the UI tool", async () => {
     const api = await loadApi();
 
@@ -114,12 +132,7 @@ describe("Obsidian Vault MCP tools", () => {
       expect(opened.structuredContent).toMatchObject({ ok: true, data: { path: "notes/meeting.md", opened: true } });
       expect(premature).toMatchObject({ isError: true, structuredContent: { code: "WRITE_PREVIEW_REQUIRED" } });
       expect(JSON.stringify([search, read, status, preview, opened, premature])).not.toContain(vault.realRoot);
-      expect(calls).toEqual(expect.arrayContaining([
-        ["search", "query=meeting", "limit=20", "format=json"],
-        ["read", "path=notes/meeting.md"],
-        ["vault", "info=name"],
-        ["open", "path=notes/meeting.md"]
-      ]));
+      expect(calls).toEqual([["open", "path=notes/meeting.md"]]);
     } finally {
       await client.close();
       await server.close();

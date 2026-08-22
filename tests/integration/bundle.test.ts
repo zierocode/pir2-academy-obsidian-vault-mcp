@@ -7,7 +7,7 @@ import { inflateRawSync } from "node:zlib";
 import { afterEach, describe, expect, it } from "vitest";
 
 const ROOT = resolve(import.meta.dirname, "../..");
-const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.2.0.mcpb");
+const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.2.6.mcpb");
 const temporaryRoots: string[] = [];
 
 type ArchiveEntry = { path: string; data: Buffer };
@@ -117,34 +117,38 @@ describe("deterministic MCPB bundle", () => {
     expect(paths.some((path) => path.includes("package-lock") || path.startsWith(".env"))).toBe(false);
     expect(first.includes(Buffer.from(ROOT))).toBe(false);
 
+    const bundledStatus = entries.find((entry) => entry.path === "server/tools/vault-status.js")!.data.toString("utf8");
+    const bundledSearch = entries.find((entry) => entry.path === "server/tools/search-notes.js")!.data.toString("utf8");
+    const bundledRenderer = entries.find((entry) => entry.path === "server/app/render-workspace.js")!.data.toString("utf8");
+    expect(bundledStatus).toContain("direct-filesystem");
+    expect(bundledStatus).toContain("obsidian_app_required");
+    expect(bundledStatus).not.toContain("runCli");
+    expect(bundledSearch).toContain("searchMarkdownNotes");
+    expect(bundledSearch).not.toContain("runCli");
+    expect(bundledRenderer).toContain("rawView.type");
+
     const manifest = JSON.parse(entries.find((entry) => entry.path === "manifest.json")!.data.toString("utf8")) as Record<string, unknown>;
     expect(manifest).toMatchObject({
       manifest_version: "0.4",
       name: "pir2-academy-obsidian-vault",
-      version: "0.2.0",
+      version: "0.2.6",
       compatibility: { platforms: ["darwin", "win32"], runtimes: { node: ">=20" } },
       server: { entry_point: "server/index.js" }
     });
     expect((manifest.tools as Array<{ name: string }>).map((tool) => tool.name)).toEqual([
-      "obsidian_vault_status",
-      "search_obsidian_notes",
-      "read_obsidian_notes",
-      "preview_obsidian_note_write",
-      "apply_obsidian_note_write",
-      "open_obsidian_note",
       "render_second_brain_workspace"
     ]);
+    expect(manifest.user_config).toBeUndefined();
+    expect((manifest.server as { mcp_config?: { env?: unknown } }).mcp_config?.env).toBeUndefined();
   }, 30_000);
 
   it("contains an executable Node entry point and passes bundle verification", () => {
     const bundle = runNpm("bundle");
     expect(bundle.status, bundle.stderr).toBe(0);
     const root = extract(parseArchive(readFileSync(BUNDLE_PATH)));
-    const vault = resolve(root, "temporary-vault");
-    mkdirSync(vault);
     const server = spawnSync(process.execPath, [resolve(root, "server/index.js")], {
       cwd: root,
-      env: { ...process.env, APPROVED_VAULT_ROOT: vault },
+      env: process.env,
       input: "",
       encoding: "utf8",
       timeout: 5_000
@@ -152,7 +156,7 @@ describe("deterministic MCPB bundle", () => {
     expect(server.error).toBeUndefined();
     expect(server.status).toBe(0);
     expect(server.stdout).toBe("");
-    expect(server.stderr).not.toContain(vault);
+    expect(server.stderr).not.toContain("APPROVED_VAULT_ROOT");
 
     const verified = runNpm("bundle:verify");
     expect(verified.status, verified.stderr).toBe(0);

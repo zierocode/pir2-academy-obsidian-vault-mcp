@@ -1,6 +1,4 @@
 import { spawn, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -76,13 +74,9 @@ async function request(child, reader, id, method, params) {
 
 async function main() {
   compileServer();
-  const root = mkdtempSync(resolve(tmpdir(), "pir2-academy-obsidian-smoke-"));
-  const vault = resolve(root, "vault");
-  mkdirSync(vault);
-  const approvedVault = realpathSync(vault);
   const child = spawn(process.execPath, [SERVER_PATH], {
     cwd: ROOT,
-    env: { ...process.env, APPROVED_VAULT_ROOT: approvedVault },
+    env: process.env,
     shell: false,
     stdio: ["pipe", "pipe", "pipe"]
   });
@@ -97,15 +91,14 @@ async function main() {
     if (!initialized.result) throw new Error("initialize failed");
     child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`);
     const listed = await request(child, reader, 2, "tools/list", {});
-    if (!Array.isArray(listed.result?.tools) || listed.result.tools.length !== 7) throw new Error("tool catalog failed");
+    if (!Array.isArray(listed.result?.tools) || listed.result.tools.length !== 1 || listed.result.tools[0]?.name !== "render_second_brain_workspace") throw new Error("tool catalog failed");
 
     const exited = waitForExit(child);
     child.stdin.end();
     if (await exited !== 0) throw new Error("server shutdown failed");
-    process.stdout.write("smoke=pass tools=7\n");
+    process.stdout.write("smoke=pass tools=1\n");
   } finally {
     if (child.exitCode === null && child.signalCode === null) child.kill();
-    rmSync(root, { force: true, recursive: true });
   }
 }
 
