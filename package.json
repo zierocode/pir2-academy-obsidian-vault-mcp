@@ -1,6 +1,6 @@
 {
   "name": "pir2-academy-obsidian-vault",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP แบบ local สำหรับอ่านและเขียน Obsidian Markdown อย่างปลอดภัย โดย PiR2 Academy",
   "license": "MIT",
   "type": "module",
@@ -10,6 +10,7 @@
     "server",
     "README.md",
     "LICENSE",
+    "NOTICE-UPSTREAM.md",
     "SECURITY.md"
   ],
   "engines": {
@@ -36,6 +37,7 @@
     "@eslint/js": "10.0.1",
     "@types/node": "22.18.6",
     "@types/write-file-atomic": "4.0.3",
+    "esbuild": "^0.28.2",
     "eslint": "10.8.0",
     "globals": "17.9.0",
     "typescript": "5.9.3",

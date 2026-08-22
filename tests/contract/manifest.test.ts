@@ -20,14 +20,14 @@ describe("MCPB manifest contract", () => {
 
     expect(packageJson).toMatchObject({
       name: "pir2-academy-obsidian-vault",
-      version: "0.1.0",
+      version: "0.2.0",
       engines: { node: ">=20" }
     });
     expect(manifest).toMatchObject({
       manifest_version: "0.4",
       name: "pir2-academy-obsidian-vault",
       display_name: "PiR2 Academy — Obsidian Vault",
-      version: "0.1.0"
+      version: "0.2.0"
     });
   });
 

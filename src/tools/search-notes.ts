@@ -1,6 +1,6 @@
 import { TOOL_DEFINITIONS } from "../contracts.js";
-import { parseSearchOutput } from "../obsidian/cli-parser.js";
 import type { UnboundToolDefinition } from "../server.js";
+import { buildNoteIndex } from "../vault/note-index.js";
 import { normalizeVaultFolderPath } from "../vault/note-path.js";
 import { z } from "zod";
 
@@ -18,16 +18,12 @@ export function createSearchNotesTool(): UnboundToolDefinition {
     handler: async (input, context) => {
       const values = input as z.infer<typeof inputSchema>;
       const folder = values.folder ? normalizeVaultFolderPath(values.folder) : undefined;
-      const receipt = await context.services.runCli([
-        "search",
-        `query=${values.query}`,
-        ...(folder ? [`path=${folder}`] : []),
-        `limit=${values.limit ?? 20}`,
-        "format=json"
-      ]);
-      const paths = await parseSearchOutput(receipt.stdout, context.services.vault);
+      const index = await buildNoteIndex(context.services.vault);
+      const results = index.search(values.query, { ...(folder ? { folder } : {}), limit: values.limit ?? 20 });
+      const paths = results.map((result) => result.path);
       return context.success("ค้นหาโน้ตใน Obsidian Vault สำเร็จครับ", {
         paths,
+        results,
         count: paths.length,
         content_is_untrusted_data: true
       });

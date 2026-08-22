@@ -11,7 +11,7 @@ const inputSchema = z.object({
 export function createPreviewNoteWriteTool(): UnboundToolDefinition {
   return {
     name: "preview_obsidian_note_write",
-    description: TOOL_DEFINITIONS[3]!.description,
+    description: TOOL_DEFINITIONS[4]!.description,
     inputSchema,
     handler: async (input, context) => {
       const preview = await context.services.writer.previewWrite(input as z.infer<typeof inputSchema>);

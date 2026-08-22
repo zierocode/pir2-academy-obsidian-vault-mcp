@@ -7,7 +7,7 @@ import { inflateRawSync } from "node:zlib";
 import { afterEach, describe, expect, it } from "vitest";
 
 const ROOT = resolve(import.meta.dirname, "../..");
-const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.1.0.mcpb");
+const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.2.0.mcpb");
 const temporaryRoots: string[] = [];
 
 type ArchiveEntry = { path: string; data: Buffer };
@@ -104,13 +104,13 @@ describe("deterministic MCPB bundle", () => {
       "package.json",
       "README.md",
       "LICENSE",
+      "NOTICE-UPSTREAM.md",
       "SECURITY.md",
       "assets/icons/icon.png",
-      "server/index.js",
-      "node_modules/@modelcontextprotocol/sdk/package.json",
-      "node_modules/write-file-atomic/package.json",
-      "node_modules/zod/package.json"
+      "server/index.js"
     ]));
+    expect(paths.every((path) => /^[A-Za-z0-9._/-]+$/u.test(path))).toBe(true);
+    expect(paths.some((path) => path.startsWith("node_modules/"))).toBe(false);
     expect(paths.some((path) => path.startsWith("src/") || path.startsWith("tests/") || path.endsWith(".map") || /\.d\.(?:ts|cts|mts)$/u.test(path))).toBe(false);
     expect(paths.some((path) => path.includes("package-lock") || path.startsWith(".env"))).toBe(false);
     expect(first.includes(Buffer.from(ROOT))).toBe(false);
@@ -119,7 +119,7 @@ describe("deterministic MCPB bundle", () => {
     expect(manifest).toMatchObject({
       manifest_version: "0.4",
       name: "pir2-academy-obsidian-vault",
-      version: "0.1.0",
+      version: "0.2.0",
       compatibility: { platforms: ["darwin", "win32"], runtimes: { node: ">=20" } },
       server: { entry_point: "server/index.js" }
     });
@@ -127,10 +127,17 @@ describe("deterministic MCPB bundle", () => {
       "obsidian_vault_status",
       "search_obsidian_notes",
       "read_obsidian_notes",
+      "get_obsidian_linked_context",
       "preview_obsidian_note_write",
       "apply_obsidian_note_write",
       "open_obsidian_note"
     ]);
+    const firstPartyText = entries
+      .filter((entry) => !entry.path.startsWith("node_modules/"))
+      .map((entry) => entry.data.toString("utf8"))
+      .join("\n");
+    expect(firstPartyText).toContain("@bitbonsai/mcpvault@0.15.0");
+    expect(firstPartyText).not.toMatch(/Local REST API|API key|Obsidian CLI adapter/iu);
   }, 30_000);
 
   it("contains an executable Node entry point and passes bundle verification", () => {
