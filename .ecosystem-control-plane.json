@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "adoption_status": "template",
-  "repo_id": "repository",
+  "adoption_status": "active",
+  "repo_id": "pir2-academy-obsidian-vault-mcp",
   "inherits": "zie-dev/ecosystem-control-plane-v1",
   "ownership": {
     "control_plane": {"owner": "zie-dev", "mode": "inherited"},
     "persistent_memory": {"owner": "zie-brain", "mode": "external"},
     "code_topology": {"owner": "codegraph", "mode": "external"},
-    "runtime_risk": {"owner": "repository", "mode": "repo_local"}
+    "runtime_risk": {"owner": "pir2-academy-obsidian-vault-mcp", "mode": "repo_local"}
   },
   "cpa": {
     "working_deck": {
@@ -44,10 +44,10 @@
     }
   },
   "lifecycle": {
-    "check": {"status": "supported", "owner": "repository", "command": ["make", "check"]},
-    "release": {"status": "not_applicable", "owner": "repository", "reason_code": "adoption_required"},
-    "deploy": {"status": "not_applicable", "owner": "repository", "reason_code": "adoption_required"},
-    "rollback": {"status": "not_applicable", "owner": "repository", "reason_code": "adoption_required"}
+    "check": {"status": "supported", "owner": "pir2-academy-obsidian-vault-mcp", "command": ["make", "check"]},
+    "release": {"status": "supported", "owner": "pir2-academy-obsidian-vault-mcp", "command": ["make", "release"]},
+    "deploy": {"status": "not_applicable", "owner": "pir2-academy-obsidian-vault-mcp", "reason_code": "github_release_distribution"},
+    "rollback": {"status": "supported", "owner": "pir2-academy-obsidian-vault-mcp", "command": ["make", "rollback"]}
   },
   "evidence": {
     "truth_layers": ["source"],
@@ -56,17 +56,21 @@
   "capabilities": [
     {
       "id": "repository_check",
-      "owner": "repository",
+      "owner": "pir2-academy-obsidian-vault-mcp",
       "evidence_command": ["make", "check"]
     }
   ],
   "performance": {
-    "owner": "repository",
-    "budgets": []
+    "owner": "pir2-academy-obsidian-vault-mcp",
+    "budgets": [
+      {"metric_id": "source_check", "max_p95_ms": 120000, "min_samples": 1, "min_success_rate": 1.0}
+    ]
   },
   "telemetry": {
-    "owner": "repository",
+    "owner": "pir2-academy-obsidian-vault-mcp",
     "privacy": "fixed_fields_no_prompts",
-    "gates": []
+    "gates": [
+      {"capability_id": "repository_check", "min_samples": 1, "min_success_rate": 1.0, "max_wall_ms_per_value_point": 120000}
+    ]
   }
 }

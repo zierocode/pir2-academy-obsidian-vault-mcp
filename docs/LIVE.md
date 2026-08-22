@@ -1,22 +1,24 @@
 # Live Project State
 
-Last source verification: 2026-08-09
-Source revision: public `main` at `d4a4aa9`; release `v0.1.0`
+Last source verification: 2026-08-22
+Source revision: candidate branch `codex/obsidian-universal-knowledge-graph`; latest published release remains `v0.1.0`
 
 ## Current verified source state
 
 - Environment: local Node.js source checkout
 - Entrypoint: `server/index.js` serves the stdio MCP when `APPROVED_VAULT_ROOT` is configured
-- Package contract: `pir2-academy-obsidian-vault@0.1.0` with six MCP tools
+- Package contract: candidate `pir-acdm-obsidian-vault@0.5.0` with 15 MCP tools
 - Vault boundary: every configured-root ancestor and existing note-path component must be non-symlink; protected directories, traversal, absolute paths, Windows device aliases, trailing dot/space names, and alternate data streams are denied
-- Write safety: previews expire after ten minutes, are single-consumption on confirmed apply, are pruned and bounded in memory, recheck source hashes, back up replacements, and write atomically
+- Graph lifecycle: scan, search, explore, inspect, preview, atomic build, audit, receipt-bound rollback, and managed source intake remain inside the approved Vault root
+- Write safety: previews expire after ten minutes, are single-consumption on confirmed apply, recheck source hashes, back up replacements, and write atomically
 - Deploy path: intentionally absent
-- Release: deterministic `pir2-academy-obsidian-vault-0.1.0.mcpb`
+- Local release candidate: deterministic `pir-acdm-obsidian-vault-0.5.0.mcpb`
 
 ## Evidence scope
 
-- Local source gates cover the MCP SDK flow, path boundary, CLI adapter, write transaction, deterministic MCPB bundle, and secret scan.
+- Local source gates cover the MCP SDK flow, path boundary, 15-tool contract, graph lifecycle, managed source intake, rollback, deterministic MCPB bundle, and secret scan.
 - Source verification is independent from the separate disposable-vault Claude Desktop/Cowork host canary recorded in the private course repository.
+- No published `v0.5.0` release or clean-machine learner proof is claimed by this source state.
 
 ## Published release evidence
 

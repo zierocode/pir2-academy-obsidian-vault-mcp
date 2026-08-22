@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0 - 2026-08-22
+
+- Added a 15-tool graph-native Second Brain runtime with scan, search, explore, build, audit, and rollback.
+- Added managed source inspection and intake inside the approved Vault boundary.
+- Added deterministic cross-platform packaging and complete graph/intake transaction tests.
+
+## 0.2.0 - 2026-08-22
+
+- Added a direct filesystem note index and linked-context graph query candidate.
+- Removed the mandatory Obsidian runtime dependency for the direct-index candidate.
+
 ## 0.1.0 - 2026-08-09
 
 - Added the local source contract for `pir2-academy-obsidian-vault@0.1.0`.
