@@ -1,22 +1,32 @@
+import { formatRuntimeReadyDiagnostic, parseRuntimeConfig, type RuntimeConfig } from "./config/runtime-config.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
-import { readFile } from "node:fs/promises";
-import { resolve as resolvePath } from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { failure, success, type ToolFailureCode, type ToolName, type ToolResult } from "./contracts.js";
 import { VaultToolError } from "./errors.js";
 import { hashPath, writeDiagnostic, type ToolLogEvent } from "./logging.js";
-import { openObsidianViewer } from "./obsidian/viewer-opener.js";
+import { runObsidianCli, type CliReceipt } from "./obsidian/cli-runner.js";
 import { createApplyNoteWriteTool } from "./tools/apply-note-write.js";
-import { createGetLinkedContextTool } from "./tools/get-linked-context.js";
+import { createApplyKnowledgeBuildTool } from "./tools/apply-knowledge-build.js";
+import { createAuditGraphTool } from "./tools/audit-graph.js";
+import { createExploreGraphTool } from "./tools/explore-graph.js";
 import { createOpenNoteTool } from "./tools/open-note.js";
 import { createPreviewNoteWriteTool } from "./tools/preview-note-write.js";
+import { createPreviewKnowledgeBuildTool } from "./tools/preview-knowledge-build.js";
 import { createReadNotesTool } from "./tools/read-notes.js";
+import { createInspectSourcesTool } from "./tools/inspect-sources.js";
+import { createPreviewSourceIntakeTool } from "./tools/preview-source-intake.js";
+import { createApplySourceIntakeTool } from "./tools/apply-source-intake.js";
+import { createRollbackChangeTool } from "./tools/rollback-change.js";
+import { createScanChangesTool } from "./tools/scan-changes.js";
 import { createSearchNotesTool } from "./tools/search-notes.js";
 import { createVaultStatusTool } from "./tools/vault-status.js";
 import { createNoteWriter, type NoteWriter } from "./vault/note-writer.js";
+import type { KnowledgeWriter } from "./vault/knowledge-writer.js";
+import type { SourceInspector } from "./source/source-inspector.js";
+import type { SourceIntakeWriter } from "./vault/source-intake-writer.js";
 import { resolveApprovedVault, type ApprovedVault } from "./vault/vault-root.js";
 
 const SAFE_ERROR_MESSAGES: Record<ToolFailureCode, string> = {
@@ -27,13 +37,32 @@ const SAFE_ERROR_MESSAGES: Record<ToolFailureCode, string> = {
   WRITE_PREVIEW_EXPIRED: "ตัวอย่างหมดอายุแล้วครับ โปรดสร้างตัวอย่างใหม่ก่อนครับ",
   WRITE_CONFLICT: "โน้ตเปลี่ยนหลังสร้างตัวอย่างครับ โปรดตรวจและสร้างตัวอย่างใหม่ครับ",
   WRITE_NOT_CONFIRMED: "ยังไม่ได้ยืนยันการบันทึกครับ โปรดส่ง ยืนยันบันทึก หรือ Confirm write ครับ",
-  INTERNAL_ERROR: "ระบบยังทำรายการนี้ไม่สำเร็จครับ โปรดลองใหม่อีกครั้งครับ"
+  GRAPH_UNINITIALIZED: "Vault นี้ยังไม่ได้สร้าง Knowledge Graph ครับ โปรดตรวจแผนเริ่มต้นก่อนครับ",
+  GRAPH_STALE: "Knowledge Graph มีข้อมูลใหม่ที่ยังไม่ได้รีเฟรชครับ",
+  GRAPH_CONFLICT: "Knowledge Graph มีข้อมูลขัดแย้งครับ โปรดตรวจตัวเลือกแก้ไขก่อนครับ",
+  GRAPH_LIMIT_EXCEEDED: "Knowledge Graph เกินขอบเขตปลอดภัยของงานนี้ครับ",
+  BUILD_PREVIEW_REQUIRED: "ยังไม่มีตัวอย่างการสร้าง Knowledge Graph ครับ โปรดสร้างตัวอย่างก่อนครับ",
+  BUILD_PREVIEW_EXPIRED: "ตัวอย่างการสร้าง Knowledge Graph หมดอายุแล้วครับ โปรดสร้างใหม่ครับ",
+  ROLLBACK_NOT_FOUND: "ไม่พบรายการเปลี่ยนแปลงที่ย้อนคืนได้ครับ",
+  ROLLBACK_CONFLICT: "มีข้อมูลใหม่หลังรายการเดิม จึงยังย้อนคืนอย่างปลอดภัยไม่ได้ครับ",
+  SOURCE_NOT_ACCESSIBLE: "ยังเข้าถึงไฟล์ต้นทางนี้อย่างปลอดภัยไม่ได้ครับ โปรดเลือกไฟล์จากโฟลเดอร์ที่ Cowork อนุญาตครับ",
+  SOURCE_UNSUPPORTED: "รูปแบบไฟล์ต้นทางนี้ยังไม่รองรับครับ โปรดใช้รูปแบบที่ระบุหรือส่งไฟล์แปลงแทนครับ",
+  SOURCE_LIMIT_EXCEEDED: "ไฟล์ต้นทางเกินขอบเขตปลอดภัยของงานนี้ครับ โปรดลดขนาดหรือแบ่งไฟล์ครับ",
+  SOURCE_PREVIEW_REQUIRED: "ยังไม่มีตัวอย่างการนำเข้าไฟล์ครับ โปรดสร้างตัวอย่างก่อนครับ",
+  SOURCE_PREVIEW_EXPIRED: "ตัวอย่างการนำเข้าไฟล์หมดอายุแล้วครับ โปรดสร้างใหม่ครับ",
+  SOURCE_CHANGED: "ไฟล์ต้นทางเปลี่ยนหลังสร้างตัวอย่างครับ โปรดตรวจและสร้างตัวอย่างใหม่ครับ",
+  SOURCE_COPY_CONFLICT: "มีไฟล์ชื่อหรือเนื้อหาขัดแย้งในปลายทางครับ โปรดตรวจตัวเลือกก่อนนำเข้าครับ",
+  OBSIDIAN_CLI_ERROR: "ยังใช้ Obsidian CLI ไม่ได้ครับ โปรดเปิด Obsidian และเปิดใช้ CLI แล้วลองใหม่ครับ"
 };
 
 export type ToolServices = {
   vault: ApprovedVault;
   writer: NoteWriter;
-  openViewer(uri: string): Promise<void>;
+  knowledgeWriter?: KnowledgeWriter;
+  sourceInspector?: SourceInspector;
+  sourceIntakeWriter?: SourceIntakeWriter;
+  listClientRoots?: () => Promise<string[]>;
+  runCli(args: readonly string[]): Promise<CliReceipt>;
 };
 
 export type ToolCallResult = {
@@ -59,21 +88,31 @@ export type ToolCatalogOptions = {
   diagnostic?: (event: ToolLogEvent) => void;
 };
 
-export type ToolServicesProvider = () => Promise<ToolServices>;
+export type RootAwareMcpServerOptions = ToolCatalogOptions & {
+  createServices?: (vaultRoot: string) => Promise<ToolServices>;
+};
 
 export function buildServerIdentity(): { name: string; version: string } {
-  return { name: "pir2-academy-obsidian-vault", version: "0.2.0" };
+  return { name: "pir-acdm-obsidian-vault", version: "0.5.0" };
 }
 
-export function createToolCatalog(services: ToolServices | ToolServicesProvider, options: ToolCatalogOptions = {}): UnboundToolDefinition[] {
+function createToolCatalog(resolveServices: () => Promise<ToolServices>, options: ToolCatalogOptions = {}): UnboundToolDefinition[] {
   const diagnostic = options.diagnostic ?? writeDiagnostic;
   const definitions = [
     createVaultStatusTool(),
+    createScanChangesTool(),
     createSearchNotesTool(),
+    createExploreGraphTool(),
     createReadNotesTool(),
-    createGetLinkedContextTool(),
+    createInspectSourcesTool(),
+    createPreviewSourceIntakeTool(),
+    createApplySourceIntakeTool(),
+    createPreviewKnowledgeBuildTool(),
+    createApplyKnowledgeBuildTool(),
     createPreviewNoteWriteTool(),
     createApplyNoteWriteTool(),
+    createAuditGraphTool(),
+    createRollbackChangeTool(),
     createOpenNoteTool()
   ];
 
@@ -84,9 +123,8 @@ export function createToolCatalog(services: ToolServices | ToolServicesProvider,
       let result: ToolCallResult;
 
       try {
-        const resolvedServices = typeof services === "function" ? await services() : services;
         const context: ToolExecutionContext = {
-          services: resolvedServices,
+          services: await resolveServices(),
           success: successResult,
           failure: failureResult
         };
@@ -104,9 +142,21 @@ export function createToolCatalog(services: ToolServices | ToolServicesProvider,
   }));
 }
 
-export function createMcpServer(services: ToolServices | ToolServicesProvider, options: ToolCatalogOptions = {}): Server {
-  const catalog = createToolCatalog(services, options);
+export function createMcpServer(services: ToolServices, options: ToolCatalogOptions = {}): Server {
+  return createMcpServerWithResolver(async () => services, options);
+}
+
+function createMcpServerWithResolver(
+  resolveBaseServices: () => Promise<ToolServices>,
+  options: ToolCatalogOptions = {}
+): Server {
   const server = new Server(buildServerIdentity(), { capabilities: { tools: {} } });
+  const resolveServices = async (): Promise<ToolServices> => {
+    const services = await resolveBaseServices();
+    services.listClientRoots ??= async () => clientRootPaths(server);
+    return services;
+  };
+  const catalog = createToolCatalog(resolveServices, options);
 
   server.setRequestHandler(ListToolsRequestSchema, () => ({
     tools: catalog.map((tool) => ({
@@ -119,39 +169,96 @@ export function createMcpServer(services: ToolServices | ToolServicesProvider, o
     const tool = catalog.find((candidate) => candidate.name === request.params.name);
     return tool
       ? tool.handler(request.params.arguments ?? {}, undefined as never)
-      : failureResult(new VaultToolError("INTERNAL_ERROR", "ไม่รู้จักเครื่องมือ"));
+      : failureResult(new VaultToolError("OBSIDIAN_CLI_ERROR", "ไม่รู้จักเครื่องมือ"));
   });
   return server;
 }
 
-export async function createProductionToolServices(environment: NodeJS.ProcessEnv = process.env): Promise<ToolServices> {
-  const configuredRoot = environment.APPROVED_VAULT_ROOT?.trim();
-  if (!configuredRoot) {
-    throw new VaultToolError("VAULT_NOT_READY", "ยังไม่ได้กำหนด Obsidian Vault ที่อนุญาต");
+async function clientRootPaths(server: Server): Promise<string[]> {
+  try {
+    const { roots } = await server.listRoots();
+    return roots.flatMap((root) => {
+      try {
+        const uri = new URL(root.uri);
+        return uri.protocol === "file:" ? [fileURLToPath(uri)] : [];
+      } catch {
+        return [];
+      }
+    });
+  } catch {
+    return [];
   }
-  const vault = await resolveApprovedVault(configuredRoot);
-  return {
-    vault,
-    writer: createNoteWriter({ vault }),
-    openViewer: openObsidianViewer
-  };
 }
 
-export function createProductionMcpServer(environment: NodeJS.ProcessEnv = process.env): Server {
-  const configuredRoot = environment.APPROVED_VAULT_ROOT?.trim();
+export function createRootAwareMcpServer(options: RootAwareMcpServerOptions = {}): Server {
   let services: Promise<ToolServices> | undefined;
+  const createServices = options.createServices ?? createProductionToolServicesForRoot;
   const resolveServices = (): Promise<ToolServices> => {
-    services ??= configuredRoot
-      ? createProductionToolServices(environment)
-      : createProductionToolServicesFromRoots(server);
+    services ??= (async () => {
+      let roots: Awaited<ReturnType<Server["listRoots"]>>["roots"];
+      try {
+        ({ roots } = await server.listRoots());
+      } catch {
+        throw new VaultToolError("VAULT_NOT_READY", "Cowork ไม่ได้ส่งโฟลเดอร์ Project หลักให้ MCP");
+      }
+      if (roots.length !== 1) {
+        throw new VaultToolError("VAULT_NOT_READY", "ต้องเลือก Vault หลักเพียงหนึ่งโฟลเดอร์ใน Cowork");
+      }
+      try {
+        const uri = new URL(roots[0]!.uri);
+        if (uri.protocol !== "file:") throw new Error("unsupported root URI");
+        return await createServices(fileURLToPath(uri));
+      } catch (error) {
+        if (error instanceof VaultToolError) throw error;
+        throw new VaultToolError("VAULT_NOT_READY", "Cowork ส่งโฟลเดอร์ Project หลักที่ใช้ไม่ได้");
+      }
+    })();
     return services;
   };
-  const server = createMcpServer(resolveServices);
+  const server = createMcpServerWithResolver(resolveServices, options);
   return server;
 }
 
-export async function runStdioServer(environment: NodeJS.ProcessEnv = process.env): Promise<void> {
-  const server = createProductionMcpServer(environment);
+export async function createProductionToolServices(
+  environment: NodeJS.ProcessEnv = process.env,
+  argv: readonly string[] = process.argv.slice(2)
+): Promise<ToolServices> {
+  const runtimeConfig = runtimeConfigForProcess(environment, argv);
+  const vault = await resolveApprovedVault(runtimeConfig.vaultRoot);
+  process.stderr.write(`${formatRuntimeReadyDiagnostic(runtimeConfig, vault.realRoot)}\n`);
+  return {
+    vault,
+    writer: createNoteWriter({ vault }),
+    runCli: (args) => runObsidianCli(args, { vault })
+  };
+}
+
+async function createProductionToolServicesForRoot(vaultRoot: string): Promise<ToolServices> {
+  const vault = await resolveApprovedVault(vaultRoot);
+  const runtimeConfig = { vaultRoot, pluginData: "" };
+  process.stderr.write(`${formatRuntimeReadyDiagnostic(runtimeConfig, vault.realRoot)}\n`);
+  return {
+    vault,
+    writer: createNoteWriter({ vault }),
+    runCli: (args) => runObsidianCli(args, { vault })
+  };
+}
+
+export async function createProductionMcpServer(
+  environment: NodeJS.ProcessEnv = process.env,
+  argv: readonly string[] = process.argv.slice(2)
+): Promise<Server> {
+  if (argv.length > 0 || environment.APPROVED_VAULT_ROOT?.trim()) {
+    return createMcpServer(await createProductionToolServices(environment, argv));
+  }
+  return createRootAwareMcpServer();
+}
+
+export async function runStdioServer(
+  environment: NodeJS.ProcessEnv = process.env,
+  argv: readonly string[] = process.argv.slice(2)
+): Promise<void> {
+  const server = await createProductionMcpServer(environment, argv);
   const transport = new StdioServerTransport();
   let closing: Promise<void> | undefined;
   const close = (): Promise<void> => {
@@ -180,31 +287,15 @@ export async function runStdioServer(environment: NodeJS.ProcessEnv = process.en
   await server.connect(transport);
 }
 
-async function createProductionToolServicesFromRoots(server: Server): Promise<ToolServices> {
-  if (!server.getClientCapabilities()?.roots) {
-    throw new VaultToolError("VAULT_NOT_READY", "MCP client ไม่ได้ส่ง Cowork project root");
+function runtimeConfigForProcess(environment: NodeJS.ProcessEnv, argv: readonly string[]): RuntimeConfig {
+  if (argv.length > 0) return parseRuntimeConfig(argv);
+
+  // Keep the pre-Plugin smoke harness working while the bundled Plugin supplies argv.
+  const configuredRoot = environment.APPROVED_VAULT_ROOT?.trim();
+  if (!configuredRoot) {
+    throw new VaultToolError("VAULT_NOT_READY", "ยังไม่ได้กำหนด Obsidian Vault ที่อนุญาต");
   }
-  const roots = (await server.listRoots(undefined, { timeout: 5_000 })).roots
-    .filter((root) => root.uri.startsWith("file:"))
-    .map((root) => fileURLToPath(root.uri));
-  const markedRoots = (await Promise.all(roots.map(async (root) => {
-    try {
-      const marker = JSON.parse(await readFile(resolvePath(root, ".pir2-obsidian-vault.json"), "utf8")) as { kind?: unknown };
-      return marker.kind === "pir2-academy-obsidian-vault" ? root : undefined;
-    } catch {
-      return undefined;
-    }
-  }))).filter((root): root is string => root !== undefined);
-  const selectedRoot = markedRoots.length === 1 ? markedRoots[0] : roots.length === 1 ? roots[0] : undefined;
-  if (!selectedRoot) {
-    throw new VaultToolError("VAULT_NOT_READY", "ระบุ Obsidian Vault ไม่ได้จาก Cowork project roots");
-  }
-  const vault = await resolveApprovedVault(selectedRoot);
-  return {
-    vault,
-    writer: createNoteWriter({ vault }),
-    openViewer: openObsidianViewer
-  };
+  return { vaultRoot: configuredRoot, pluginData: environment.CLAUDE_PLUGIN_DATA?.trim() ?? "" };
 }
 
 function successResult(message: string, data: unknown): ToolCallResult {
@@ -216,7 +307,7 @@ function successResult(message: string, data: unknown): ToolCallResult {
 }
 
 function failureResult(error: unknown): ToolCallResult {
-  const code = error instanceof VaultToolError ? error.code : "INTERNAL_ERROR";
+  const code = error instanceof VaultToolError ? error.code : "OBSIDIAN_CLI_ERROR";
   const envelope = failure(code, SAFE_ERROR_MESSAGES[code]);
   return {
     content: [{ type: "text", text: JSON.stringify(envelope) }],

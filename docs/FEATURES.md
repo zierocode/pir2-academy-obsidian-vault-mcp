@@ -4,19 +4,21 @@
 
 - MCPB v0.4 manifest for macOS and Windows Node 20+
 - One `approved_vault_root` directory configuration
-- Seven stable local MCP tool names and stable result envelope
-- Filesystem-direct Thai search, Wikilink resolution, outgoing links, Backlinks, unresolved links and bounded one/two-hop graph
-- Core flow works while Obsidian is closed; the app opener is optional
-- Safe preview-confirm writes with conflict detection, backup and atomic replacement
+- Fifteen stable local MCP tool names and stable result envelope
+- Direct Markdown graph indexing, link/backlink traversal, search, audit, and change scanning
+- Preview/confirm/apply knowledge builds with receipt-bound rollback
+- Managed source inspection and intake with explicit policy boundaries
+- Safe single-note preview/apply and optional Obsidian open action
 - Local deterministic secret scan policy and runner
 
 ## Deferred
 
-- Physical clean-host Claude Desktop verification on macOS and Windows
-- Course-plugin assembly and learner distribution
+- GitHub release publication for `v0.5.0`
+- Clean-machine macOS and Windows learner certification
 
 ## Verification
 
 - Primary source gate: `npm run check`
 - Secret gate: `npm run scan:secrets`
 - Runtime smoke: `npm run smoke`
+- Release candidate: `make release`

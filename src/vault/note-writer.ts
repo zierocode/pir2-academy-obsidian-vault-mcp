@@ -68,7 +68,7 @@ async function ensureDirectory(path: string): Promise<void> {
   }
   const details = await lstat(path);
   if (!details.isDirectory() || details.isSymbolicLink()) {
-    throw new VaultToolError("INTERNAL_ERROR", "ไม่สามารถสร้างข้อมูลสำรองของโน้ตได้อย่างปลอดภัย");
+    throw new VaultToolError("OBSIDIAN_CLI_ERROR", "ไม่สามารถสร้างข้อมูลสำรองของโน้ตได้อย่างปลอดภัย");
   }
 }
 
@@ -80,7 +80,7 @@ async function writeBackup(vault: ApprovedVault, preview: WritePreview, content:
   const relativeBackup = relative(vault.realRoot, backupPath).split(sep).join("/");
 
   if (!relativeBackup.startsWith(`${BACKUP_DIRECTORY}/`) || relativeBackup.includes("../")) {
-    throw new VaultToolError("INTERNAL_ERROR", "ไม่สามารถสร้างข้อมูลสำรองของโน้ตได้อย่างปลอดภัย");
+    throw new VaultToolError("OBSIDIAN_CLI_ERROR", "ไม่สามารถสร้างข้อมูลสำรองของโน้ตได้อย่างปลอดภัย");
   }
 
   await ensureDirectory(backupRoot);
@@ -157,7 +157,7 @@ export function createNoteWriter(options: NoteWriterOptions): NoteWriter {
         };
       } catch (error) {
         if (error instanceof VaultToolError) throw error;
-        throw new VaultToolError("INTERNAL_ERROR", "บันทึกโน้ตไม่สำเร็จและไฟล์เดิมยังคงอยู่");
+        throw new VaultToolError("OBSIDIAN_CLI_ERROR", "บันทึกโน้ตไม่สำเร็จและไฟล์เดิมยังคงอยู่");
       }
     }
   };

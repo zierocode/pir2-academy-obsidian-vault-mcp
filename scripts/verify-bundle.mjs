@@ -7,14 +7,22 @@ import { McpbManifestSchema } from "@anthropic-ai/mcpb/schemas/0.4";
 import { SECRET_PATTERNS } from "./secret-scan-policy.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.2.0.mcpb");
+const BUNDLE_PATH = resolve(ROOT, "dist/pir-acdm-obsidian-vault-0.5.0.mcpb");
 const EXPECTED_TOOLS = [
   "obsidian_vault_status",
-  "search_obsidian_notes",
+  "scan_obsidian_changes",
+  "search_obsidian_knowledge",
+  "explore_obsidian_graph",
   "read_obsidian_notes",
-  "get_obsidian_linked_context",
+  "inspect_obsidian_sources",
+  "preview_obsidian_source_intake",
+  "apply_obsidian_source_intake",
+  "preview_obsidian_knowledge_build",
+  "apply_obsidian_knowledge_build",
   "preview_obsidian_note_write",
   "apply_obsidian_note_write",
+  "audit_obsidian_graph",
+  "rollback_obsidian_change",
   "open_obsidian_note"
 ];
 
@@ -65,14 +73,15 @@ function validateEntries(entries, archive) {
   const paths = entries.map((entry) => entry.path);
   assert(paths.length === new Set(paths).size, "duplicate archive path");
   assert(paths.every(safeArchivePath), "unsafe archive path");
-  assert(paths.every((path) => /^[A-Za-z0-9._/-]+$/u.test(path)), "Claude plugin-incompatible archive path");
   assert(paths.every((path, index) => index === 0 || paths[index - 1].localeCompare(path) <= 0), "archive paths are not deterministic");
   assert(paths.includes("manifest.json") && paths.includes("package.json"), "required package metadata is missing");
   assert(paths.includes("server/index.js"), "compiled server entry point is missing");
   assert(paths.includes("assets/icons/icon.png"), "bundle icon is missing");
   assert(paths.includes("LICENSE"), "bundle license is missing");
-  assert(paths.includes("NOTICE-UPSTREAM.md"), "upstream notice is missing");
-  assert(!paths.some((path) => path.startsWith("node_modules/")), "runtime dependency closure must be compiled into the server");
+  assert(paths.includes("node_modules/@modelcontextprotocol/sdk/package.json"), "MCP SDK closure is missing");
+  assert(paths.includes("node_modules/write-file-atomic/package.json"), "atomic write closure is missing");
+  assert(paths.includes("node_modules/yaml/package.json"), "YAML parser closure is missing");
+  assert(paths.includes("node_modules/zod/package.json"), "schema closure is missing");
   assert(!paths.some((path) => path.startsWith("src/") || path.startsWith("tests/") || path.endsWith(".map") || /\.d\.(?:ts|cts|mts)$/u.test(path)), "source or type artifacts are bundled");
   assert(!paths.some((path) => path.startsWith(".env") || path.includes("package-lock") || path.endsWith(".mcpb")), "unexpected local artifact is bundled");
   assert(!archive.includes(Buffer.from(ROOT)), "bundle contains an absolute source path");
@@ -85,7 +94,7 @@ function validateManifest(entries) {
   const manifest = JSON.parse(manifestEntry.data.toString("utf8"));
   const packageJson = JSON.parse(packageEntry.data.toString("utf8"));
   assert(McpbManifestSchema.safeParse(manifest).success, "MCPB manifest schema validation failed");
-  assert(manifest.name === "pir2-academy-obsidian-vault" && manifest.version === "0.2.0", "manifest identity drift");
+  assert(manifest.name === "pir-acdm-obsidian-vault" && manifest.version === "0.5.0", "manifest identity drift");
   assert(packageJson.name === manifest.name && packageJson.version === manifest.version, "package identity drift");
   assert(manifest.server?.entry_point === "server/index.js", "unexpected server entry point");
   assert(entries.some((entry) => entry.path === manifest.icon), "manifest icon target is missing");

@@ -2,11 +2,19 @@ import { describe, expect, it } from "vitest";
 
 const EXPECTED_TOOLS = [
   "obsidian_vault_status",
-  "search_obsidian_notes",
+  "scan_obsidian_changes",
+  "search_obsidian_knowledge",
+  "explore_obsidian_graph",
   "read_obsidian_notes",
-  "get_obsidian_linked_context",
+  "inspect_obsidian_sources",
+  "preview_obsidian_source_intake",
+  "apply_obsidian_source_intake",
+  "preview_obsidian_knowledge_build",
+  "apply_obsidian_knowledge_build",
   "preview_obsidian_note_write",
   "apply_obsidian_note_write",
+  "audit_obsidian_graph",
+  "rollback_obsidian_change",
   "open_obsidian_note"
 ];
 
@@ -19,7 +27,7 @@ async function loadToolContracts(): Promise<Record<string, unknown> | undefined>
 }
 
 describe("tool contract", () => {
-  it("exposes exactly the seven safe Obsidian tools", async () => {
+  it("exposes exactly the fifteen graph-native Obsidian tools", async () => {
     const contracts = await loadToolContracts();
 
     expect(contracts).toBeDefined();

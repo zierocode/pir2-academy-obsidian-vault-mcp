@@ -17,7 +17,7 @@ smoke: ## Run golden-path smoke verification
 	@npm run smoke
 
 status: ## Report the local release-candidate state
-	@node -e "const c=require('node:crypto'),f=require('node:fs'),p=require('./package.json'),b='dist/pir2-academy-obsidian-vault-'+p.version+'.mcpb'; console.log('version='+p.version); console.log(f.existsSync(b)?'bundle='+b+' sha256='+c.createHash('sha256').update(f.readFileSync(b)).digest('hex'):'bundle=absent')"
+	@node -e "const c=require('node:crypto'),f=require('node:fs'),p=require('./package.json'),b='dist/pir-acdm-obsidian-vault-'+p.version+'.mcpb'; console.log('version='+p.version); console.log(f.existsSync(b)?'bundle='+b+' sha256='+c.createHash('sha256').update(f.readFileSync(b)).digest('hex'):'bundle=absent')"
 
 release: ## Build and verify the local release candidate
 	@npm run scan:secrets

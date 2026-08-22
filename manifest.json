@@ -1,13 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/main/schemas/mcpb-manifest-v0.4.schema.json",
   "manifest_version": "0.4",
-  "name": "pir2-academy-obsidian-vault",
-  "display_name": "PiR2 Academy — Obsidian Vault",
-  "version": "0.2.0",
-  "description": "MCP สำหรับอ่านและเขียน Obsidian Markdown อย่างปลอดภัย โดย PiR2 Academy",
+  "name": "pir-acdm-obsidian-vault",
+  "display_name": "PiR-ACDM — Obsidian Second Brain MCP",
+  "version": "0.5.0",
+  "description": "MCP สำหรับอ่านและเขียน Obsidian Vault อย่างปลอดภัย โดย PiR-ACDM",
   "long_description": "MCP แบบ local สำหรับอ่าน ค้นหา เปิด และเขียน Obsidian Markdown ภายใน Vault ที่ผู้เรียนเลือกเพียงหนึ่งแห่ง โดยต้อง preview และยืนยันก่อนบันทึกทุกครั้ง",
   "author": {
-    "name": "PiR2 Academy"
+    "name": "PiR-ACDM"
   },
   "icon": "assets/icons/icon.png",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "obsidian",
     "markdown",
     "local",
-    "pir2-academy"
+    "pir-acdm"
   ],
   "compatibility": {
     "platforms": [
@@ -35,15 +35,15 @@
         "${__dirname}/server/index.js"
       ],
       "env": {
-        "APPROVED_VAULT_ROOT": "${user_config.approved_vault_root}"
+        "APPROVED_VAULT_ROOT": "${user_config.vault_root}"
       }
     }
   },
   "user_config": {
-    "approved_vault_root": {
+    "vault_root": {
       "type": "directory",
-      "title": "โฟลเดอร์ Obsidian Vault ที่อนุญาต",
-      "description": "เลือก Obsidian Vault เพียงหนึ่งโฟลเดอร์ที่ MCP นี้อ่านและเขียนได้",
+      "title": "Obsidian Vault root (เลือก 1 โฟลเดอร์)",
+      "description": "กด Browse แล้วเลือกโฟลเดอร์หลักของ Vault ที่ต้องการให้ MCP อ่านและเขียน",
       "required": true,
       "multiple": false
     }
@@ -54,16 +54,40 @@
       "description": "ตรวจว่า Obsidian Vault ที่อนุญาตพร้อมใช้งานหรือยัง"
     },
     {
-      "name": "search_obsidian_notes",
-      "description": "ค้นหาโน้ต Markdown ภายใน Obsidian Vault ที่อนุญาต"
+      "name": "scan_obsidian_changes",
+      "description": "ตรวจหาไฟล์ใหม่ ไฟล์เปลี่ยน และสถานะกราฟภายใน Vault โดยไม่แก้ข้อมูล"
+    },
+    {
+      "name": "search_obsidian_knowledge",
+      "description": "ค้นหาความรู้พร้อมเส้นทางความสัมพันธ์จากลิงก์และแบ็กลิงก์ใน Vault"
+    },
+    {
+      "name": "explore_obsidian_graph",
+      "description": "สำรวจโน้ตที่เชื่อมโยงกันในกราฟ Obsidian แบบจำกัดขอบเขต"
     },
     {
       "name": "read_obsidian_notes",
       "description": "อ่านโน้ต Markdown ที่ระบุภายในขนาดปลอดภัย"
     },
     {
-      "name": "get_obsidian_linked_context",
-      "description": "อ่านโน้ตพร้อมลิงก์ขาออก Backlink และข้อมูลที่เชื่อมโยงกัน"
+      "name": "inspect_obsidian_sources",
+      "description": "ตรวจไฟล์ต้นทางหลายรูปแบบแบบอ่านอย่างเดียวก่อนนำเข้า Second Brain"
+    },
+    {
+      "name": "preview_obsidian_source_intake",
+      "description": "สร้างตัวอย่างการนำไฟล์ต้นทางและความรู้เข้า Vault โดยยังไม่เขียนไฟล์"
+    },
+    {
+      "name": "apply_obsidian_source_intake",
+      "description": "นำเข้าไฟล์ต้นทางและความรู้ตามตัวอย่างล่าสุดหลังได้รับคำยืนยัน"
+    },
+    {
+      "name": "preview_obsidian_knowledge_build",
+      "description": "สร้างตัวอย่างการสร้างหรือรีเฟรช Knowledge Graph โดยยังไม่เขียนไฟล์"
+    },
+    {
+      "name": "apply_obsidian_knowledge_build",
+      "description": "ใช้แผน Knowledge Graph ที่ตรวจแล้วหลังได้รับคำยืนยันที่ถูกต้อง"
     },
     {
       "name": "preview_obsidian_note_write",
@@ -72,6 +96,14 @@
     {
       "name": "apply_obsidian_note_write",
       "description": "บันทึกตัวอย่างล่าสุดหลังยืนยันด้วยข้อความที่กำหนด"
+    },
+    {
+      "name": "audit_obsidian_graph",
+      "description": "ตรวจสุขภาพลิงก์ แบ็กลิงก์ แหล่งข้อมูล และดัชนีกราฟโดยไม่แก้ไฟล์"
+    },
+    {
+      "name": "rollback_obsidian_change",
+      "description": "ย้อนคืนธุรกรรมที่รู้จักอย่างปลอดภัยโดยไม่ลบงานที่เกิดภายหลัง"
     },
     {
       "name": "open_obsidian_note",

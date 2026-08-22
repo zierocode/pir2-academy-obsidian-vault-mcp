@@ -1,11 +1,9 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { ListRootsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { afterEach, describe, expect, it } from "vitest";
 
 const ROOT = resolve(import.meta.dirname, "../..");
@@ -32,39 +30,6 @@ afterEach(() => {
 });
 
 describe("compiled Obsidian MCP stdio server", () => {
-  it("binds the vault from MCP roots when no environment path is configured", async () => {
-    const serverPath = compileServer();
-    const vault = createVault();
-    writeFileSync(resolve(vault, ".pir2-obsidian-vault.json"), '{"kind":"pir2-academy-obsidian-vault"}\n');
-    const supportRoot = createVault();
-    const transport = new StdioClientTransport({
-      command: process.execPath,
-      args: [serverPath],
-      cwd: ROOT,
-      env: Object.fromEntries(Object.entries(process.env).filter(([key]) => key !== "APPROVED_VAULT_ROOT")),
-      stderr: "pipe"
-    });
-    const client = new Client(
-      { name: "vitest-roots", version: "1.0.0" },
-      { capabilities: { roots: { listChanged: true } } }
-    );
-    client.setRequestHandler(ListRootsRequestSchema, () => ({
-      roots: [
-        { uri: pathToFileURL(supportRoot).href, name: "ไฟล์ประกอบ" },
-        { uri: pathToFileURL(vault).href, name: "starter-vault" }
-      ]
-    }));
-
-    try {
-      await client.connect(transport);
-      expect((await client.listTools()).tools).toHaveLength(7);
-      const status = await client.callTool({ name: "obsidian_vault_status", arguments: {} });
-      expect(status).toMatchObject({ structuredContent: { ok: true } });
-    } finally {
-      await client.close();
-    }
-  }, 30_000);
-
   it("initializes, lists tools, and applies only an explicitly confirmed preview without calling Obsidian", async () => {
     const serverPath = compileServer();
     expect(existsSync(serverPath)).toBe(true);
@@ -81,7 +46,7 @@ describe("compiled Obsidian MCP stdio server", () => {
     try {
       await client.connect(transport);
       const listed = await client.listTools();
-      expect(listed.tools).toHaveLength(7);
+      expect(listed.tools).toHaveLength(15);
 
       const premature = await client.callTool({
         name: "apply_obsidian_note_write",

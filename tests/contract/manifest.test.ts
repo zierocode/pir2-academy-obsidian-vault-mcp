@@ -11,7 +11,7 @@ function readJson(path: string): Record<string, unknown> {
 }
 
 describe("MCPB manifest contract", () => {
-  it("declares the exact PiR2 package identity", () => {
+  it("declares the exact PiR-ACDM package identity", () => {
     expect(existsSync(PACKAGE_PATH)).toBe(true);
     expect(existsSync(MANIFEST_PATH)).toBe(true);
 
@@ -19,15 +19,15 @@ describe("MCPB manifest contract", () => {
     const manifest = readJson(MANIFEST_PATH);
 
     expect(packageJson).toMatchObject({
-      name: "pir2-academy-obsidian-vault",
-      version: "0.2.0",
+      name: "pir-acdm-obsidian-vault",
+      version: "0.5.0",
       engines: { node: ">=20" }
     });
     expect(manifest).toMatchObject({
       manifest_version: "0.4",
-      name: "pir2-academy-obsidian-vault",
-      display_name: "PiR2 Academy — Obsidian Vault",
-      version: "0.2.0"
+      name: "pir-acdm-obsidian-vault",
+      display_name: "PiR-ACDM — Obsidian Second Brain MCP",
+      version: "0.5.0"
     });
   });
 
@@ -46,10 +46,10 @@ describe("MCPB manifest contract", () => {
 
     const manifest = readJson(MANIFEST_PATH);
     expect(manifest.user_config).toEqual({
-      approved_vault_root: {
+      vault_root: {
         type: "directory",
-        title: "โฟลเดอร์ Obsidian Vault ที่อนุญาต",
-        description: "เลือก Obsidian Vault เพียงหนึ่งโฟลเดอร์ที่ MCP นี้อ่านและเขียนได้",
+        title: "Obsidian Vault root (เลือก 1 โฟลเดอร์)",
+        description: "กด Browse แล้วเลือกโฟลเดอร์หลักของ Vault ที่ต้องการให้ MCP อ่านและเขียน",
         required: true,
         multiple: false
       }

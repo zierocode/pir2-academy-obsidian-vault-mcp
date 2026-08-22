@@ -1,7 +1,7 @@
 {
-  "name": "pir2-academy-obsidian-vault",
-  "version": "0.2.0",
-  "description": "MCP แบบ local สำหรับอ่านและเขียน Obsidian Markdown อย่างปลอดภัย โดย PiR2 Academy",
+  "name": "pir-acdm-obsidian-vault",
+  "version": "0.5.0",
+  "description": "MCP แบบ local สำหรับอ่านและเขียน Obsidian Vault อย่างปลอดภัย โดย PiR-ACDM",
   "license": "MIT",
   "type": "module",
   "main": "./server/index.js",
@@ -10,7 +10,6 @@
     "server",
     "README.md",
     "LICENSE",
-    "NOTICE-UPSTREAM.md",
     "SECURITY.md"
   ],
   "engines": {
@@ -18,6 +17,7 @@
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
+    "build:plugin-runtime": "node scripts/build-plugin-runtime.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -30,6 +30,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",
     "write-file-atomic": "5.0.1",
+    "yaml": "2.9.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
@@ -37,7 +38,7 @@
     "@eslint/js": "10.0.1",
     "@types/node": "22.18.6",
     "@types/write-file-atomic": "4.0.3",
-    "esbuild": "^0.28.2",
+    "esbuild": "0.28.2",
     "eslint": "10.8.0",
     "globals": "17.9.0",
     "typescript": "5.9.3",
