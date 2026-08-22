@@ -10,7 +10,7 @@ const inputSchema = z.object({
 export function createApplyNoteWriteTool(): UnboundToolDefinition {
   return {
     name: "apply_obsidian_note_write",
-    description: TOOL_DEFINITIONS[4]!.description,
+    description: TOOL_DEFINITIONS[5]!.description,
     inputSchema,
     handler: async (input, context) => {
       const values = input as z.infer<typeof inputSchema>;

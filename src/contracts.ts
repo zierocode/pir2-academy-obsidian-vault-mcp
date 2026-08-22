@@ -7,7 +7,7 @@ export type ToolCode =
   | "WRITE_PREVIEW_EXPIRED"
   | "WRITE_CONFLICT"
   | "WRITE_NOT_CONFIRMED"
-  | "OBSIDIAN_CLI_ERROR";
+  | "INTERNAL_ERROR";
 
 export type ToolFailureCode = Exclude<ToolCode, "OK">;
 
@@ -19,6 +19,7 @@ export const TOOL_NAMES = [
   "obsidian_vault_status",
   "search_obsidian_notes",
   "read_obsidian_notes",
+  "get_obsidian_linked_context",
   "preview_obsidian_note_write",
   "apply_obsidian_note_write",
   "open_obsidian_note"
@@ -35,6 +36,7 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
   { name: "obsidian_vault_status", description: "ตรวจว่า Obsidian Vault ที่อนุญาตพร้อมใช้งานหรือยัง" },
   { name: "search_obsidian_notes", description: "ค้นหาโน้ต Markdown ภายใน Obsidian Vault ที่อนุญาต" },
   { name: "read_obsidian_notes", description: "อ่านโน้ต Markdown ที่ระบุภายในขนาดปลอดภัย" },
+  { name: "get_obsidian_linked_context", description: "อ่านโน้ตพร้อมลิงก์ขาออก Backlink และข้อมูลที่เชื่อมโยงกัน" },
   { name: "preview_obsidian_note_write", description: "สร้างตัวอย่างการเขียนโน้ตโดยยังไม่แก้ไฟล์จริง" },
   { name: "apply_obsidian_note_write", description: "บันทึกตัวอย่างล่าสุดหลังยืนยันด้วยข้อความที่กำหนด" },
   { name: "open_obsidian_note", description: "เปิดโน้ตที่ระบุในแอป Obsidian โดยไม่แก้เนื้อหา" }

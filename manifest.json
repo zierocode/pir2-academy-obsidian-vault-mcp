@@ -3,7 +3,7 @@
   "manifest_version": "0.4",
   "name": "pir2-academy-obsidian-vault",
   "display_name": "PiR2 Academy — Obsidian Vault",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP สำหรับอ่านและเขียน Obsidian Markdown อย่างปลอดภัย โดย PiR2 Academy",
   "long_description": "MCP แบบ local สำหรับอ่าน ค้นหา เปิด และเขียน Obsidian Markdown ภายใน Vault ที่ผู้เรียนเลือกเพียงหนึ่งแห่ง โดยต้อง preview และยืนยันก่อนบันทึกทุกครั้ง",
   "author": {
@@ -60,6 +60,10 @@
     {
       "name": "read_obsidian_notes",
       "description": "อ่านโน้ต Markdown ที่ระบุภายในขนาดปลอดภัย"
+    },
+    {
+      "name": "get_obsidian_linked_context",
+      "description": "อ่านโน้ตพร้อมลิงก์ขาออก Backlink และข้อมูลที่เชื่อมโยงกัน"
     },
     {
       "name": "preview_obsidian_note_write",

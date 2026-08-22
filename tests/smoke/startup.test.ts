@@ -68,6 +68,6 @@ describe("MCP startup smoke", () => {
 
     expect(result.error).toBeUndefined();
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("smoke=pass tools=6");
+    expect(result.stdout).toContain("smoke=pass tools=7");
   });
 });

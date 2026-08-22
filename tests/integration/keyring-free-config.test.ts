@@ -5,7 +5,7 @@ import { inflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 
 const ROOT = resolve(import.meta.dirname, "../..");
-const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.1.0.mcpb");
+const BUNDLE_PATH = resolve(ROOT, "dist/pir2-academy-obsidian-vault-0.2.0.mcpb");
 
 function bundleManifest(): Record<string, unknown> {
   if (!process.env.npm_execpath) throw new Error("npm_execpath is required for repository script tests");
