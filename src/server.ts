@@ -17,7 +17,6 @@ import { createPreviewNoteWriteTool } from "./tools/preview-note-write.js";
 import { createPreviewKnowledgeBuildTool } from "./tools/preview-knowledge-build.js";
 import { createReadNotesTool } from "./tools/read-notes.js";
 import { createInspectSourcesTool } from "./tools/inspect-sources.js";
-import { createReadSourceContentTool } from "./tools/read-source-content.js";
 import { createPreviewSourceIntakeTool } from "./tools/preview-source-intake.js";
 import { createApplySourceIntakeTool } from "./tools/apply-source-intake.js";
 import { createRollbackChangeTool } from "./tools/rollback-change.js";
@@ -26,6 +25,8 @@ import { createSearchNotesTool } from "./tools/search-notes.js";
 import { createVaultStatusTool } from "./tools/vault-status.js";
 import { createNoteWriter, type NoteWriter } from "./vault/note-writer.js";
 import type { KnowledgeWriter } from "./vault/knowledge-writer.js";
+import type { SourceInspector } from "./source/source-inspector.js";
+import type { SourceIntakeWriter } from "./vault/source-intake-writer.js";
 import { resolveApprovedVault, type ApprovedVault } from "./vault/vault-root.js";
 
 const SAFE_ERROR_MESSAGES: Record<ToolFailureCode, string> = {
@@ -58,6 +59,9 @@ export type ToolServices = {
   vault: ApprovedVault;
   writer: NoteWriter;
   knowledgeWriter?: KnowledgeWriter;
+  sourceInspector?: SourceInspector;
+  sourceIntakeWriter?: SourceIntakeWriter;
+  listClientRoots?: () => Promise<string[]>;
   runCli(args: readonly string[]): Promise<CliReceipt>;
 };
 
@@ -101,7 +105,6 @@ function createToolCatalog(resolveServices: () => Promise<ToolServices>, options
     createExploreGraphTool(),
     createReadNotesTool(),
     createInspectSourcesTool(),
-    createReadSourceContentTool(),
     createPreviewSourceIntakeTool(),
     createApplySourceIntakeTool(),
     createPreviewKnowledgeBuildTool(),
@@ -144,11 +147,16 @@ export function createMcpServer(services: ToolServices, options: ToolCatalogOpti
 }
 
 function createMcpServerWithResolver(
-  resolveServices: () => Promise<ToolServices>,
+  resolveBaseServices: () => Promise<ToolServices>,
   options: ToolCatalogOptions = {}
 ): Server {
-  const catalog = createToolCatalog(resolveServices, options);
   const server = new Server(buildServerIdentity(), { capabilities: { tools: {} } });
+  const resolveServices = async (): Promise<ToolServices> => {
+    const services = await resolveBaseServices();
+    services.listClientRoots ??= async () => clientRootPaths(server);
+    return services;
+  };
+  const catalog = createToolCatalog(resolveServices, options);
 
   server.setRequestHandler(ListToolsRequestSchema, () => ({
     tools: catalog.map((tool) => ({
@@ -164,6 +172,22 @@ function createMcpServerWithResolver(
       : failureResult(new VaultToolError("OBSIDIAN_CLI_ERROR", "ไม่รู้จักเครื่องมือ"));
   });
   return server;
+}
+
+async function clientRootPaths(server: Server): Promise<string[]> {
+  try {
+    const { roots } = await server.listRoots();
+    return roots.flatMap((root) => {
+      try {
+        const uri = new URL(root.uri);
+        return uri.protocol === "file:" ? [fileURLToPath(uri)] : [];
+      } catch {
+        return [];
+      }
+    });
+  } catch {
+    return [];
+  }
 }
 
 export function createRootAwareMcpServer(options: RootAwareMcpServerOptions = {}): Server {

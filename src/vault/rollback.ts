@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, unlink } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, extname, isAbsolute, relative, resolve, sep } from "node:path";
 import writeFileAtomic from "write-file-atomic";
 import { z } from "zod";
 import { VaultToolError } from "../errors.js";
@@ -31,10 +31,10 @@ export async function rollbackKnowledgeChange(
   if (!CONFIRMATIONS.has(confirmation)) throw new VaultToolError("WRITE_NOT_CONFIRMED", "exact confirmation is required");
   const receipt = await readReceipt(vault, receiptId);
   const targets = await Promise.all(receipt.files.map(async (file) => {
-    const note = await resolveNotePath(vault, file.path);
-    const current = await readOptional(note.absolutePath);
+    const note = await resolveReceiptTarget(vault, file.path);
+    const current = await readOptionalBuffer(note.absolutePath);
     if (hash(current) !== file.proposedHash) throw new VaultToolError("ROLLBACK_CONFLICT", "target changed after transaction");
-    const backup = file.backupPath ? await readOptional(resolve(vault.realRoot, ...file.backupPath.split("/"))) : null;
+    const backup = file.backupPath ? await readOptionalBuffer(resolve(vault.realRoot, ...file.backupPath.split("/"))) : null;
     if (file.beforeHash !== null && hash(backup) !== file.beforeHash) {
       throw new VaultToolError("ROLLBACK_CONFLICT", "backup is unavailable or changed");
     }
@@ -76,19 +76,36 @@ async function readReceipt(vault: ApprovedVault, receiptId: string) {
   }
 }
 
-async function readOptional(path: string): Promise<string | null> {
+async function readOptionalBuffer(path: string): Promise<Buffer | null> {
   try {
-    return await readFile(path, "utf8");
+    return await readFile(path);
   } catch (error) {
     if (error !== null && typeof error === "object" && "code" in error && error.code === "ENOENT") return null;
     throw error;
   }
 }
 
-async function atomicWrite(path: string, content: string): Promise<void> {
-  await writeFileAtomic(path, content, { encoding: "utf8", mode: 0o600, fsync: true });
+async function atomicWrite(path: string, content: string | Buffer): Promise<void> {
+  await writeFileAtomic(path, content, { mode: 0o600, fsync: true });
 }
 
-function hash(content: string | null): string | null {
+function hash(content: string | Buffer | null): string | null {
   return content === null ? null : createHash("sha256").update(content).digest("hex");
+}
+
+const MANAGED_EXTENSIONS = new Set([".md", ".txt", ".docx", ".xlsx", ".pptx", ".pdf", ".png", ".jpg", ".jpeg", ".wav", ".m4a", ".mp3"]);
+
+async function resolveReceiptTarget(vault: ApprovedVault, path: string): Promise<{ absolutePath: string }> {
+  if (extname(path).toLowerCase() === ".md") return resolveNotePath(vault, path);
+  const portable = path.replaceAll("\\", "/");
+  if (!portable || portable.startsWith("/") || portable.split("/").some((part) => !part || part === "." || part === "..")) {
+    throw new VaultToolError("ROLLBACK_CONFLICT", "invalid receipt target");
+  }
+  if (!MANAGED_EXTENSIONS.has(extname(portable).toLowerCase()) || [".obsidian", ".pir-acdm", ".git"].includes(portable.split("/")[0]!)) {
+    throw new VaultToolError("ROLLBACK_CONFLICT", "unsupported receipt target");
+  }
+  const absolutePath = resolve(vault.realRoot, ...portable.split("/"));
+  const rel = relative(vault.realRoot, absolutePath);
+  if (rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) throw new VaultToolError("ROLLBACK_CONFLICT", "receipt target escapes Vault");
+  return { absolutePath };
 }

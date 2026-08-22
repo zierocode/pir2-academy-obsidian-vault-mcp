@@ -74,10 +74,6 @@
       "description": "ตรวจไฟล์ต้นทางหลายรูปแบบแบบอ่านอย่างเดียวก่อนนำเข้า Second Brain"
     },
     {
-      "name": "read_obsidian_source_content",
-      "description": "อ่านเนื้อหาและตำแหน่งอ้างอิงของไฟล์ต้นทางที่ตรวจแล้วแบบจำกัดขอบเขต"
-    },
-    {
       "name": "preview_obsidian_source_intake",
       "description": "สร้างตัวอย่างการนำไฟล์ต้นทางและความรู้เข้า Vault โดยยังไม่เขียนไฟล์"
     },

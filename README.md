@@ -4,10 +4,11 @@ MCP แบบ local สำหรับสร้าง ตรวจ รีเฟ�
 
 ## ขอบเขต
 
-Bundle นี้มี 12 tools: status, change scan, graph-native search, graph explore,
-read, knowledge-build preview/apply, single-note preview/apply, graph audit,
+Bundle นี้มี 15 tools: status, change scan, graph-native search, graph explore,
+read, source inspect/intake preview/apply, knowledge-build preview/apply, single-note preview/apply, graph audit,
 receipt-bound rollback และ open. MCP จัดการไฟล์ กราฟ ลิงก์ แบ็กลิงก์
-ธุรกรรม และหลักฐานเชิงโครงสร้าง ส่วนการตีความ meeting, requirement,
+ธุรกรรม และหลักฐานเชิงโครงสร้าง แต่ไม่อ่านความหมายของ Word, Excel,
+PowerPoint, PDF, รูป หรือเสียง การอ่านและตีความ meeting, requirement,
 decision, weekly brief และงานเฉพาะโดเมนอยู่ใน Skill ไม่ได้ hardcode ใน MCP
 
 ทุก read/write ถูกจำกัดอยู่ใน approved Vault root เดียว และปฏิเสธ
@@ -46,7 +47,7 @@ make doctor
 ```
 
 `npm run bundle` writes the local deterministic release candidate to
-`dist/pir-acdm-obsidian-vault-0.4.0.mcpb` and prints its SHA-256 checksum.
+`dist/pir-acdm-obsidian-vault-0.5.0.mcpb` and prints its SHA-256 checksum.
 `npm run bundle:verify` validates its MCPB v0.4 metadata, runtime dependency
 closure, executable entry point, and exclusions. These commands do not publish,
 install, or upload the bundle.

@@ -97,12 +97,12 @@ async function main() {
     if (!initialized.result) throw new Error("initialize failed");
     child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`);
     const listed = await request(child, reader, 2, "tools/list", {});
-    if (!Array.isArray(listed.result?.tools) || listed.result.tools.length !== 12) throw new Error("tool catalog failed");
+    if (!Array.isArray(listed.result?.tools) || listed.result.tools.length !== 15) throw new Error("tool catalog failed");
 
     const exited = waitForExit(child);
     child.stdin.end();
     if (await exited !== 0) throw new Error("server shutdown failed");
-    process.stdout.write("smoke=pass tools=12\n");
+    process.stdout.write("smoke=pass tools=15\n");
   } finally {
     if (child.exitCode === null && child.signalCode === null) child.kill();
     rmSync(root, { force: true, recursive: true });

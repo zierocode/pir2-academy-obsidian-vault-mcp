@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
 describe("managed source intake tool contract", () => {
-  it("publishes four bounded closed schemas", async () => {
+  it("publishes three bounded closed schemas without parsing source content", async () => {
     const root = await mkdtemp(resolve(tmpdir(), "pir-acdm-source-contract-"));
     const vaultPath = resolve(root, "vault");
     await mkdir(vaultPath);
@@ -35,11 +35,7 @@ describe("managed source intake tool contract", () => {
         required: ["paths"],
         properties: { paths: { minItems: 1, maxItems: 20 } }
       });
-      expect(schemas.read_obsidian_source_content).toMatchObject({
-        type: "object",
-        additionalProperties: false,
-        required: ["source_id"]
-      });
+      expect(schemas.read_obsidian_source_content).toBeUndefined();
       expect(schemas.preview_obsidian_source_intake).toMatchObject({
         type: "object",
         additionalProperties: false,

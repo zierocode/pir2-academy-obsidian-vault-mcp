@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, opendir, readFile, unlink, writeFile } from "node:fs/promises";
-import { dirname, resolve, sep } from "node:path";
+import { dirname, extname, resolve, sep } from "node:path";
 import writeFileAtomic from "write-file-atomic";
 import { VaultToolError } from "../errors.js";
 import { buildGraph, type GraphInput } from "../graph/graph-builder.js";
@@ -210,6 +210,7 @@ async function proposedGraphInputs(vault: ApprovedVault, planned: readonly Plann
 
 export async function loadVaultGraphInputs(vault: ApprovedVault): Promise<GraphInput[]> {
   const inputs: GraphInput[] = [];
+  const sourceExtensions = new Set([".txt", ".docx", ".xlsx", ".pptx", ".pdf", ".png", ".jpg", ".jpeg", ".wav", ".m4a", ".mp3"]);
   async function visit(directory: string, relativeDirectory: string): Promise<void> {
     const handle = await opendir(directory);
     for await (const entry of handle) {
@@ -219,6 +220,7 @@ export async function loadVaultGraphInputs(vault: ApprovedVault): Promise<GraphI
       if (entry.isSymbolicLink()) continue;
       if (entry.isDirectory()) await visit(absolute, relative);
       else if (entry.isFile() && entry.name.endsWith(".md")) inputs.push({ path: relative, content: await readFile(absolute, "utf8") });
+      else if (entry.isFile() && sourceExtensions.has(extname(entry.name).toLowerCase())) inputs.push({ path: relative, content: "" });
     }
   }
   await visit(vault.realRoot, "");

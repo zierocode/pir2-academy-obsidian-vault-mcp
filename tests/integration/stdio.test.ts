@@ -46,7 +46,7 @@ describe("compiled Obsidian MCP stdio server", () => {
     try {
       await client.connect(transport);
       const listed = await client.listTools();
-      expect(listed.tools).toHaveLength(12);
+      expect(listed.tools).toHaveLength(15);
 
       const premature = await client.callTool({
         name: "apply_obsidian_note_write",
